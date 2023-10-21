@@ -2,15 +2,12 @@
 """
 Created on Tue Oct 10 12:12:19 2023
 
-@author: tsz874
+@author: Ashkan
 """
 ## Loading essential libraries
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.model_selection import cross_validate
-import sys
-folder_path = r'C:\Users\tsz874\Downloads\FAB_Projects\Stuff_For_Ashkan\PLS-main'
-sys.path.append(folder_path)
 from Algorithms.cpu_bootstrap_new import bootstrap_index_generator_new
 Y_preprocess_mode = 'autoscale'  #'mean_centering' #  'none'
 if Y_preprocess_mode == 'mean_centering':
@@ -26,8 +23,6 @@ from sklearn.model_selection import train_test_split
 from scipy.io import loadmat  # , savemat
 from sklearn.metrics import mean_squared_error
 import pickle
-folder_path = r'C:\Users\tsz874\Downloads\FAB_Projects\Stuff_For_Ashkan\RealWildStuff'
-sys.path.append(folder_path)
 from essential_Funcs_for_Presenting_PLS_Results import Intermediate_Plot_PLS1_2,\
     Par_idx_finder, Plot_Measured_Predicted_NMR_MV, Calc_Opt_LVs_PLS2_PLS1#,\
     #Plot_Measured_Predicted_NMR_PLS, Plot_Measured_Predicted_NMR_PLS, #\ 
@@ -38,7 +33,7 @@ from essential_Funcs_for_Presenting_PLS_Results import Intermediate_Plot_PLS1_2,
 # nu_list : a counter for the number of stratification
 # 
 #%%# Loading Full original LP NMR data
-Path = r'C:\Users\tsz874\Downloads\FAB_Projects\PL_W0610 shared wish Ashkan'
+Path = 'Baseline_PLS2_Model\Original_Data'
 X = loadmat(Path + r'\NMR_r9.mat')
 X = X['NMR_r9']
 X1_org = np.copy(X)
