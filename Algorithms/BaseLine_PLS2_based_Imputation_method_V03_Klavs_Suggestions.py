@@ -29,11 +29,11 @@ from essential_Funcs_for_Presenting_PLS_Results import Intermediate_Plot_PLS1_2,
     #q2_calc, Plot_Measured_vs_Predicted, Plot_Measured_Predicted_NMR
 ###############################################################################
 #%###################### List of Variables Descriptions #####################%#
-
+folder_path = r'Baseline_PLS2_Model\RealWildStuff'
 # nu_list : a counter for the number of stratification
 # 
 #%%# Loading Full original LP NMR data
-Path = 'Baseline_PLS2_Model\Original_Data'
+Path = r'Baseline_PLS2_Model\Original_Data'
 X = loadmat(Path + r'\NMR_r9.mat')
 X = X['NMR_r9']
 X1_org = np.copy(X)
@@ -394,30 +394,7 @@ def Baseline_PLS2_Modeling_for_Calc_Normalized_RMSEs(X_tr_val, Y_tr_val, X_MV,
         plt.xticks(XX[:Lt]);plt.grid()
         plt.legend();plt.show()
     return RMSECN, RMSECVN, RMSECN_noMV, RMSECVN_noMV
-###############################################################################
-#%%#
-##
-N_uc_var = Y_train_val.shape[1]
-y_preds_trval = np.empty((Max_LV,N_uc_var))
-y_preds_te = np.copy(y_preds_tr)
-MD_trval = np.median(Y_train_val,axis=0)
-algorithm = 1
-estimator = PLS(algorithm=algorithm, Signal_Type='NMR')
-fit_params = {'A': Max_LV}
-estimator.fit(X_train1, Y_train1, Max_LV)
-y_pred_tr = estimator.predict(X_train1)*np.std(Y_train1,axis=0)+np.mean(Y_train1, axis=0)
-y_pred_val = estimator.predict(X_val)*np.std(Y_val,axis=0)+np.mean(Y_val, axis=0)
-##
-for ii in nu_list:
-    XX_tmp = X_MV[int(Rank_pnt[ii][0]):int(Rank_pnt[ii][1])+1,:]
-    Y_NMV_tmp = Y_NMV[int(Rank_pnt[ii][0]):int(Rank_pnt[ii][1])+1,:]
-    Y_MV_tmp = Y_MV[int(Rank_pnt[ii][0]):int(Rank_pnt[ii][1])+1,:]
-    ss1 = XX_tmp.shape[0]
-    for pp1 in range(ss1):
-        z_idx = np.where(Y_MV_tmp[pp1,:] ==0)
-        MD_te = np.median(Y_MV_tmp[],axis=0)
-
-    
+###############################################################################   
 #%%
 # Main Code with random stratification
 rand_seed = 42
