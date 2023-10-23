@@ -339,7 +339,7 @@ def Baseline_PLS2_Modeling_for_Calc_Normalized_RMSEs(X_tr_val, Y_tr_val, X_MV,
     estimator.fit(X_tr_val, Y_tr_val, Max_LV)
     y_pred_trval = estimator.predict(X_tr_val)*np.std(Y_tr_val,axis=0)+np.mean(Y_tr_val, axis=0)
     y_pred_te = estimator.predict(X_MV)*np.std(Y_MVM,axis=0)+np.mean(Y_MVM, axis=0)
-    N_uc_var = Y_train1.shape[1]
+    N_uc_var = Y_tr_val.shape[1]
     RMSECN = np.zeros((Max_LV,N_uc_var))
     RMSECVN = np.copy(RMSECN)
     RMSECN_noMV = np.copy(RMSECN)
