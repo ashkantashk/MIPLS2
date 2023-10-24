@@ -334,34 +334,35 @@ def Baseline_PLS2_Modeling_for_Calc_Normalized_RMSEs(X_tr_val, Y_tr_val, X_MV,
     # in the test set & each PLS2 model with an LV from 1 to Max_LV
     # RMSECN_noMV: normalized RMSECs for the variables in the test set with no MVs & each PLS2 
     # model with an LV from 1 to Max_LV
-    MD_trval = np.median(Y_tr_val,axis=0)
-    MD_te = np.median(Y_NMV,axis=0)
+        MD_trval = np.median(Y_tr_val,axis=0)
+    MD_te = np.zeros((Y_MVM.shape[1],1))
+    for ii in range(len(MD_te)):
+        MD_te[ii] = np.median(Y_MV[np.where(Y_MV[:,ii]!=0),ii])
+    MD_te = np.squeeze(MD_te)
     estimator.fit(X_tr_val, Y_tr_val, Max_LV)
     y_pred_trval = estimator.predict(X_tr_val)*np.std(Y_tr_val,axis=0)+np.mean(Y_tr_val, axis=0)
     y_pred_te = estimator.predict(X_MV)*np.std(Y_MVM,axis=0)+np.mean(Y_MVM, axis=0)
     N_uc_var = Y_tr_val.shape[1]
-    RMSECN = np.zeros((Max_LV,N_uc_var))
-    RMSECVN = np.copy(RMSECN)
-    RMSECN_noMV = np.copy(RMSECN)
-    RMSECVN_noMV = np.copy(RMSECN)
+    RMSECN = [100*mean_squared_error(Y_tr_val/MD_trval,\
+                               y_pred_trval[ii,:,:]/MD_trval,squared=False) 
+            for ii in range(Max_LV)]
+    RMSECVN = [100*mean_squared_error(Y_MVM/MD_te,\
+                               y_pred_te[ii,:,:]/MD_te,squared=False) 
+            for ii in range(Max_LV)]
+    RMSECN_noMV = np.zeros((Max_LV,N_uc_var))#np.copy(RMSECN)
+    RMSECVN_noMV = np.copy(RMSECN_noMV)
     for ii in range(Max_LV):
         for kk in range(Y_MV.shape[0]):
             idxt = np.where(Y_MV[kk,:]==0)
+            MD_te_n = np.delete(MD_te, idxt)
+            MD_trval_n = np.delete(MD_trval, idxt)
             yrt = np.delete(y_pred_trval[ii,:,:], idxt, axis=1)
             ypt = np.delete(Y_tr_val, idxt, axis=1)
-            RMSECN_noMV[ii,kk] = mean_squared_error(yrt, ypt,squared=False)
+            RMSECN_noMV[ii,kk] = mean_squared_error(yrt/MD_trval_n, ypt/MD_trval_n,squared=False)*100
             yrt = np.delete(Y_MV[kk,:], idxt)
             ypt = np.delete(y_pred_te[ii,kk,:], idxt)
-            RMSECVN_noMV[ii,kk] = mean_squared_error(yrt, ypt, squared=False)
-        RMSECN_noMV[ii,:]*=100/MD_trval
-        RMSECVN_noMV[ii,:]*=100/MD_te
-        RMSECN[ii,:] = [mean_squared_error(y_pred_trval[ii,:,jj],Y_tr_val[:,jj],squared=False) 
-                       for jj in range(N_uc_var)]
-        RMSECN[ii,:]*=100/MD_trval
-        RMSECVN[ii,:] = [mean_squared_error(y_pred_te[ii,:,jj],Y_MVM[:,jj],squared=False) 
-                       for jj in range(N_uc_var)]
-        RMSECVN[ii,:]*=100/MD_te
-        if not no_show:
+            RMSECVN_noMV[ii,kk] = mean_squared_error(yrt/MD_te_n, ypt/MD_te_n, squared=False)*100
+        if no_show!=None and not no_show:
             plt.bar(np.arange(1,N_uc_var+1),RMSECN[ii,:],
                     width=0.9, color=np.array([0.2, 0.8, 0]), 
                     edgecolor = 'black', 
@@ -374,12 +375,12 @@ def Baseline_PLS2_Modeling_for_Calc_Normalized_RMSEs(X_tr_val, Y_tr_val, X_MV,
                     linewidth=1, alpha=0.5)
             plt.title(f'RMSECVN vs. uc Variables for LV={ii+1}');plt.xlabel('65 uc Var.');
             plt.ylabel('RMSECVN (% of AVG_MD_val)');plt.show()
-    if not no_show:
+    if no_show!=None and not no_show:
         XX = np.arange(1,Max_LV+1)
-        Lt = 24
-        plt.plot(XX[:Lt],np.mean(RMSECN,axis=1)[:Lt], '*', color='r',
+        Lt = Max_LV
+        plt.plot(XX[:Lt],RMSECN[:Lt], '*', color='r',
                  linestyle='--', linewidth=2, label = 'PLS2-based RMSECN')
-        plt.plot(XX[:Lt],np.mean(RMSECVN,axis=1)[:Lt], 'o', color='b', 
+        plt.plot(XX[:Lt],RMSECVN[:Lt], 'o', color='b', 
                  linestyle = '-.', linewidth=2, label = 'PLS2-based RMSECVN')
         plt.title('RMSECN & RMSECVN vs. LVs');plt.xlabel('LVs');
         plt.ylabel('RMSECN & RMSECVN (% of AVG_MD_val)');
