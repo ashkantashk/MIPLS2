@@ -28,7 +28,8 @@ Fig. 2. Results of Normalized RMSEC and RMSECV (% per Avg. for each uc variable)
 <table>
     <thead>
         <tr>
-            <th style="text-align:center;"><img src="img.png" alt="Image"></th>
+            <th style="text-align:center;"><img src="![Fig1](https://github.com/ashkantashk/Baseline_PLS2_Model/assets/53473481/89ca87c1-12a9-4dab-abef-3caecdc5e08c)
+" alt="Image"></th>
         </tr>
     </thead>
     <tbody>
