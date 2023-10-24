@@ -18,7 +18,7 @@ The only difference between the first and second scenarios is that in the second
 
 <!--<div align=”center”>-->
 ![Fig1](https://github.com/ashkantashk/Baseline_PLS2_Model/assets/53473481/89ca87c1-12a9-4dab-abef-3caecdc5e08c)
-<!--<p>Perfectly balanced</p>-->
+<!--<p> Perfectly balanced</p> -->
 
 Fig. 1. Results of Normalized RMSEC and RMSECV (% per Avg. for each uc variable) per. LVs ∈ [1,24] in the presence of MVs 
 <!--</div>-->
