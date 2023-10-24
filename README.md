@@ -25,3 +25,12 @@ Fig. 1. Results of Normalized RMSEC and RMSECV (% per Avg. for each uc variable)
 
 Fig. 2. Results of Normalized RMSEC and RMSECV (% per Avg. for each uc variable) per. LVs ∈ [1,24] by excluding MVs
 
+<table>
+    <thead>
+        <tr>
+            <th style="text-align:center;"><img src="img.png" alt="Image"></th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
