@@ -19,7 +19,6 @@ The only difference between the first and second scenarios is that in the second
 ![Fig1](https://github.com/ashkantashk/Baseline_PLS2_Model/assets/53473481/89ca87c1-12a9-4dab-abef-3caecdc5e08c)
 
 Fig. 1. Results of Normalized RMSEC and RMSECV (% per Avg. for each uc variable) per. LVs ∈ [1,24] in the presence of MVs 
-<!--</div>-->
 
 ![Fig2](https://github.com/ashkantashk/Baseline_PLS2_Model/assets/53473481/45a92290-520e-4045-bc3b-63c2d6b6511f)
 
@@ -28,8 +27,7 @@ Fig. 2. Results of Normalized RMSEC and RMSECV (% per Avg. for each uc variable)
 <table>
     <thead>
         <tr>
-            <th style="text-align:center;"><img src="![Fig1](https://github.com/ashkantashk/Baseline_PLS2_Model/assets/53473481/89ca87c1-12a9-4dab-abef-3caecdc5e08c)
-" alt="Image"></th>
+            <th style="text-align:center;"><img src="![Fig1](https://github.com/ashkantashk/Baseline_PLS2_Model/assets/53473481/89ca87c1-12a9-4dab-abef-3caecdc5e08c)" alt="Image"></th>
         </tr>
     </thead>
     <tbody>
