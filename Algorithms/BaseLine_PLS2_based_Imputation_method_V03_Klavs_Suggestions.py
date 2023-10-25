@@ -304,11 +304,14 @@ if not no_show:
         plt.title(f'RMSEs vs. LVs for uc Var. #{jj+1} {uc_proc_labels[jj]}');plt.xlabel('LVs');
         plt.ylabel('RMSEs (% of AVG_MDs)');plt.legend();plt.grid();plt.show()
 #%%
+#%%
 algorithm = 1
 estimator = PLS(algorithm=algorithm, Signal_Type='NMR')
 def Baseline_PLS2_Modeling_for_Calc_Normalized_RMSEs(X_tr_val, Y_tr_val, X_MV, 
                                                      Y_MVM, Y_MV, Y_NMV, Max_LV, 
-                                                     estimator, no_show=None):
+                                                     estimator, 
+                                                     Y_preprocess_mode, 
+                                                     no_show=None):
     # This function calculates the normalized (percentage of RMSEs per median) for each variable
     # Inputs: 
     # X_tr_val = X_good, Y_tr_val = Y_good : both containing 25 samples 
@@ -334,14 +337,21 @@ def Baseline_PLS2_Modeling_for_Calc_Normalized_RMSEs(X_tr_val, Y_tr_val, X_MV,
     # in the test set & each PLS2 model with an LV from 1 to Max_LV
     # RMSECN_noMV: normalized RMSECs for the variables in the test set with no MVs & each PLS2 
     # model with an LV from 1 to Max_LV
-        MD_trval = np.median(Y_tr_val,axis=0)
+    MD_trval = np.median(Y_tr_val,axis=0)
     MD_te = np.zeros((Y_MVM.shape[1],1))
     for ii in range(len(MD_te)):
         MD_te[ii] = np.median(Y_MV[np.where(Y_MV[:,ii]!=0),ii])
     MD_te = np.squeeze(MD_te)
     estimator.fit(X_tr_val, Y_tr_val, Max_LV)
-    y_pred_trval = estimator.predict(X_tr_val)*np.std(Y_tr_val,axis=0)+np.mean(Y_tr_val, axis=0)
-    y_pred_te = estimator.predict(X_MV)*np.std(Y_MVM,axis=0)+np.mean(Y_MVM, axis=0)
+    if Y_preprocess_mode == 'mean_centering':
+        y_pred_trval = estimator.predict(X_tr_val)+np.mean(Y_tr_val, axis=0)
+        y_pred_te = estimator.predict(X_MV)+np.mean(Y_MVM, axis=0)
+    elif Y_preprocess_mode == 'autoscale':
+        y_pred_trval = estimator.predict(X_tr_val)*np.std(Y_tr_val,axis=0)+np.mean(Y_tr_val, axis=0)
+        y_pred_te = estimator.predict(X_MV)*np.std(Y_MVM,axis=0)+np.mean(Y_MVM, axis=0)
+    else:
+        y_pred_trval = estimator.predict(X_tr_val)
+        y_pred_te = estimator.predict(X_MV)
     N_uc_var = Y_tr_val.shape[1]
     RMSECN = [100*mean_squared_error(Y_tr_val/MD_trval,\
                                y_pred_trval[ii,:,:]/MD_trval,squared=False) 
