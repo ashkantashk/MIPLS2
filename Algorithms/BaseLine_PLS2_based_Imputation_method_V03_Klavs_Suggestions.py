@@ -304,18 +304,17 @@ if not no_show:
         plt.title(f'RMSEs vs. LVs for uc Var. #{jj+1} {uc_proc_labels[jj]}');plt.xlabel('LVs');
         plt.ylabel('RMSEs (% of AVG_MDs)');plt.legend();plt.grid();plt.show()
 #%%
-#%%
 algorithm = 1
 estimator = PLS(algorithm=algorithm, Signal_Type='NMR')
 def Baseline_PLS2_Modeling_for_Calc_Normalized_RMSEs(X_tr_val, Y_tr_val, X_MV, 
-                                                     Y_MVM, Y_MV, Y_NMV, Max_LV, 
+                                                     YY2, YY3, YY4, Max_LV, 
                                                      estimator, 
-                                                     Y_preprocess_mode, 
+                                                     Y_preprocess_mode,
                                                      no_show=None):
     # This function calculates the normalized (percentage of RMSEs per median) for each variable
     # Inputs: 
     # X_tr_val = X_good, Y_tr_val = Y_good : both containing 25 samples 
-    # X_MV , Y_MVM , Y_MV, Y_NMV : containing 20 samples with 136 synthetic missing values (MVs)
+    # X_MV , YY2 (Y_MVM) , YY3 (Y_MV), YY4 (Y_NMV) : containing 20 samples with 136 synthetic missing values (MVs)
     # Max_LV : maximum no. of LVs considered for implementing PLS2 models
     # estimator : the PLS2 algorithm using setting up parameters like the type of algorithm, the no. 
     # LVs, applying an specific preprocessing to the processing data, etc.
@@ -338,10 +337,13 @@ def Baseline_PLS2_Modeling_for_Calc_Normalized_RMSEs(X_tr_val, Y_tr_val, X_MV,
     # RMSECN_noMV: normalized RMSECs for the variables in the test set with no MVs & each PLS2 
     # model with an LV from 1 to Max_LV
     MD_trval = np.median(Y_tr_val,axis=0)
-    MD_te = np.zeros((Y_MVM.shape[1],1))
-    for ii in range(len(MD_te)):
-        MD_te[ii] = np.median(Y_MV[np.where(Y_MV[:,ii]!=0),ii])
-    MD_te = np.squeeze(MD_te)
+    if len(YY4.shape)==1:
+        MD_te = YY2
+    else:
+        MD_te = np.zeros((YY3.shape[1],))
+        for ii in range(len(MD_te)):
+            MD_te[ii] = np.median(YY3[np.where(YY3[:,ii]!=0),ii])
+        # MD_te = np.squeeze(MD_te)    
     estimator.fit(X_tr_val, Y_tr_val, Max_LV)
     if Y_preprocess_mode == 'mean_centering':
         y_pred_trval = estimator.predict(X_tr_val)+np.mean(Y_tr_val, axis=0)
@@ -353,23 +355,31 @@ def Baseline_PLS2_Modeling_for_Calc_Normalized_RMSEs(X_tr_val, Y_tr_val, X_MV,
         y_pred_trval = estimator.predict(X_tr_val)
         y_pred_te = estimator.predict(X_MV)
     N_uc_var = Y_tr_val.shape[1]
-    RMSECN = [100*mean_squared_error(Y_tr_val/MD_trval,\
-                               y_pred_trval[ii,:,:]/MD_trval,squared=False) 
+    RMSECN1 = [100*mean_squared_error(Y_tr_val/MD_trval,\
+                                y_pred_trval[ii,:,:]/MD_trval,squared=False) 
             for ii in range(Max_LV)]
-    RMSECVN = [100*mean_squared_error(Y_MVM/MD_te,\
-                               y_pred_te[ii,:,:]/MD_te,squared=False) 
-            for ii in range(Max_LV)]
-    RMSECN_noMV = np.zeros((Max_LV,N_uc_var))#np.copy(RMSECN)
+    RMSECVN1 = [100*mean_squared_error(YY2/MD_te,y_pred_te[ii,:,:]/MD_te,
+                                      squared=False)
+                for ii in range(Max_LV)]
+    RMSECN = np.zeros((Max_LV,N_uc_var))
+    RMSECVN = np.copy(RMSECN)
+    RMSECN_noMV = np.copy(RMSECN)
     RMSECVN_noMV = np.copy(RMSECN_noMV)
     for ii in range(Max_LV):
-        for kk in range(Y_MV.shape[0]):
-            idxt = np.where(Y_MV[kk,:]==0)
+        RMSECN[ii,:] = [mean_squared_error(y_pred_trval[ii,:,jj],Y_tr_val[:,jj],squared=False) 
+                       for jj in range(N_uc_var)]
+        RMSECN[ii,:]*=(100/MD_trval)
+        RMSECVN[ii,:] = [mean_squared_error(y_pred_te[ii,:,jj],YY2[:,jj],squared=False) 
+                       for jj in range(N_uc_var)]
+        RMSECVN[ii,:]*=(100/MD_te)
+        for kk in range(YY3.shape[0]):
+            idxt = np.where(YY3[kk,:]==0)
             MD_te_n = np.delete(MD_te, idxt)
             MD_trval_n = np.delete(MD_trval, idxt)
             yrt = np.delete(y_pred_trval[ii,:,:], idxt, axis=1)
             ypt = np.delete(Y_tr_val, idxt, axis=1)
             RMSECN_noMV[ii,kk] = mean_squared_error(yrt/MD_trval_n, ypt/MD_trval_n,squared=False)*100
-            yrt = np.delete(Y_MV[kk,:], idxt)
+            yrt = np.delete(YY3[kk,:], idxt)
             ypt = np.delete(y_pred_te[ii,kk,:], idxt)
             RMSECVN_noMV[ii,kk] = mean_squared_error(yrt/MD_te_n, ypt/MD_te_n, squared=False)*100
         if no_show!=None and not no_show:
@@ -385,12 +395,21 @@ def Baseline_PLS2_Modeling_for_Calc_Normalized_RMSEs(X_tr_val, Y_tr_val, X_MV,
                     linewidth=1, alpha=0.5)
             plt.title(f'RMSECVN vs. uc Variables for LV={ii+1}');plt.xlabel('65 uc Var.');
             plt.ylabel('RMSECVN (% of AVG_MD_val)');plt.show()
+            plt.show()
     if no_show!=None and not no_show:
         XX = np.arange(1,Max_LV+1)
+        for kk in range(N_uc_var):
+            plt.plot(XX, RMSECN[:,kk],'*',color='r',linestyle='-.',
+                     label=f'RMSECN for var#{kk+1}')
+            plt.plot(XX, RMSECVN[:,kk],'o',color='b',linestyle='--',
+                     label=f'RMSECVN for var#{kk+1}');
+            plt.title('RMSECN & RMSECVN vs. LVs');plt.xlabel('LVs');
+            plt.ylabel('RMSECN & RMSECVN (% of AVG_MD_val)');
+            plt.grid();plt.legend();plt.show()
         Lt = Max_LV
-        plt.plot(XX[:Lt],RMSECN[:Lt], '*', color='r',
+        plt.plot(XX[:Lt],RMSECN1[:Lt], '*', color='r',
                  linestyle='--', linewidth=2, label = 'PLS2-based RMSECN')
-        plt.plot(XX[:Lt],RMSECVN[:Lt], 'o', color='b', 
+        plt.plot(XX[:Lt],RMSECVN1[:Lt], 'o', color='b', 
                  linestyle = '-.', linewidth=2, label = 'PLS2-based RMSECVN')
         plt.title('RMSECN & RMSECVN vs. LVs');plt.xlabel('LVs');
         plt.ylabel('RMSECN & RMSECVN (% of AVG_MD_val)');
