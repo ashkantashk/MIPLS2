@@ -8,6 +8,10 @@ The NMR spectra are from 1.4 to 0.6 p.p.m. range. The spectra originally contain
 <p align="justify">
 The current Code provides chemometricians the ability to predict and impute the missing values existing in the measurements of target variables utilizing other mutual data such as spectroscopy measurements. If there are two multivariate datasets constructed based on two different measurements of similar samples or populations, then in the case that there are some unknown measurements or labile and unstable amounts in one of these two datasets, the current tool provides this ability that the missing values belonging to different target variables can be predicted and imputed efficiently and with the lowest rmsep using the other flawless dataset. 
 </p>
+
+![Fig_PLS2_sample_Application_new](https://github.com/ashkantashk/Baseline_PLS2_Model/assets/53473481/5b62eee7-70d4-4db6-b28d-c6c57bda8861)
+
+
 <!--![X_Y_Data](https://github.com/ashkantashk/Baseline_PLS2_Model/assets/53473481/3e50bcda-5d95-49c0-8375-a29de74cc810)-->
 
 <!--!Alt Fig_PLS2_sample_Application_new.png-->
