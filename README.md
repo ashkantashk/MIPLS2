@@ -11,7 +11,6 @@ The current Code provides chemometricians the ability to predict and impute the 
 <!--![X_Y_Data](https://github.com/ashkantashk/Baseline_PLS2_Model/assets/53473481/3e50bcda-5d95-49c0-8375-a29de74cc810)-->
 
 <!--!Alt Fig_PLS2_sample_Application_new.png-->
-!GitHub Logo
 
 The codes are available at both the main and the Revised_Versions Branches of the current repository. 
 
