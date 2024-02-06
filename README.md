@@ -6,7 +6,7 @@ This repository contains code and experimental data for a baseline PLS2-based im
 The directory, Original_data, contains the original NMR spectroscopy and ultracentrifugation (UC) measurements of the LipoProtein (LP) fractions and subfraction in human blood. 
 The NMR spectra are from 1.4 to 0.6 p.p.m. range. The spectra originally contained 316 uniformly distributed samples and the spectral length is 3488. The UC dataset contains some values with no reliable references and therefore should be considered as missing values (MVs). The MVs are replaced with zero values in the current dataset. 
 
-![X_Y_Data](https://github.com/ashkantashk/Baseline_PLS2_Model/assets/53473481/3e50bcda-5d95-49c0-8375-a29de74cc810)
+<![X_Y_Data](https://github.com/ashkantashk/Baseline_PLS2_Model/assets/53473481/3e50bcda-5d95-49c0-8375-a29de74cc810)>
 
 The codes are available at both the main and the Revised_Versions Branches of the current repository. 
 
