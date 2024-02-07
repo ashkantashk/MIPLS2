@@ -1,4 +1,4 @@
-# Baseline_PLS2_Model
+# PLS2-Based Imputation Method
 
 # Introduction
 This repository contains code and experimental data for a baseline PLS2-based imputation algorithm.
