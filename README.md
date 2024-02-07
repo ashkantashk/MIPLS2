@@ -42,7 +42,7 @@ This Python code script contains the code lines for implementing the baseline PL
 <p align="justify">
 
 To observe the performance of the proposed PLS2-based imputation method, we implemented two scenarios: 
- Both scenarios follow the same procedure as follows: 
+ Both scenarios follow the same procedure as follows:
   - Calibrating and predicting 65 LP fractions and subfractions measured using ultracentrifugation and presenting the normalized RMSEC (RMSECN) and RMSECV (RMSECVN) by dividing the original RMSEs by the median of each variable and then calculating the average of each RMSE for each #LVs. 
   - The only difference between the first and second scenarios is that in the second scenario, the normalized RMSEs for each sample are calculated in the absence of the missing values (MVs) for that sample. In the end, the procedure is completely like the one in the first scenario.
 
