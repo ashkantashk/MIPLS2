@@ -16,7 +16,23 @@ The codes are available at both the main and the Revised_Versions Branches of th
 1- Baseline_PLS2_Imputation_Functions_new.py
 <p align="justify">
 This Python code script contains the code lines for implementing the baseline PLS2 model and the trials for figuring out the impact of missing values on the covariance relationship between the prediction results.
-<!--The defined function ... in the above code observes the aforementioned study of the missing values. -->
+
+## Running Codes
+> All the codes have been tested on Windows 10 using Anaconda.
+
+> For running the code, you should first install all the libraries and frameworks mentioned in the requirements.txt file. For this goal, you just need to run the following code in your command window for your active environment:
+>
+>     pip install --user -r requirements.txt
+
+> The other codes in this repository are:
+> 1. 
+> 2. 
+
+* Note1: .
+* Note2: .
+* Note3: .
+* Note4: .
+
 </p>
 
 ## Descriptions: 
