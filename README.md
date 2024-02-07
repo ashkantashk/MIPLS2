@@ -10,9 +10,6 @@ The current Code provides chemometricians the ability to predict and impute the 
 ![Fig_PLS2_sample_Application_new](https://github.com/ashkantashk/Baseline_PLS2_Model/assets/53473481/5b62eee7-70d4-4db6-b28d-c6c57bda8861)
 
 
-![Fig_PLS2_sample_Application_new1](https://github.com/ashkantashk/Baseline_PLS2_Model/assets/53473481/fd43da31-f17b-4fbe-8772-9b2cc63671a8)
-
-
 The codes are available at both the main and the Revised_Versions Branches of the current repository. 
 
 # Scripts
