@@ -42,7 +42,6 @@ This Python code script contains the code lines for implementing the baseline PL
 ## Descriptions
 
 <p align="justify">
-
 To observe the performance of the proposed PLS2-based imputation method, we implemented two scenarios: 
  Both scenarios follow the same procedure as follows:
 </p>
