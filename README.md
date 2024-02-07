@@ -12,12 +12,9 @@ The current Code provides chemometricians the ability to predict and impute the 
 
 The codes are available at both the main and the Revised_Versions Branches of the current repository. 
 
-# Scripts
-1- Baseline_PLS2_Imputation_Functions_new.py
-<p align="justify">
-This Python code script contains the code lines for implementing the baseline PLS2 model and the trials for figuring out the impact of missing values on the covariance relationship between the prediction results.
 
 ## Running Codes
+<p align="justify">
 > All the codes have been tested on Windows 10 using Anaconda.
 
 > For running the code, you should first install all the libraries and frameworks mentioned in the requirements.txt file. For this goal, you just need to run the following code in your command window for your active environment:
@@ -34,6 +31,11 @@ This Python code script contains the code lines for implementing the baseline PL
 * Note2: .
 * Note3: .
 * Note4: .
+  
+# Scripts
+1- Baseline_PLS2_Imputation_Functions_new.py
+<p align="justify">
+This Python code script contains the code lines for implementing the baseline PLS2 model and the trials for figuring out the impact of missing values on the covariance relationship between the prediction results.
 
 </p>
 
@@ -43,9 +45,13 @@ This Python code script contains the code lines for implementing the baseline PL
 
 To observe the performance of the proposed PLS2-based imputation method, we implemented two scenarios: 
  Both scenarios follow the same procedure as follows:
-  - Calibrating and predicting 65 LP fractions and subfractions measured using ultracentrifugation and presenting the normalized RMSEC (RMSECN) and RMSECV (RMSECVN) by dividing the original RMSEs by the median of each variable and then calculating the average of each RMSE for each #LVs. 
-  - The only difference between the first and second scenarios is that in the second scenario, the normalized RMSEs for each sample are calculated in the absence of the missing values (MVs) for that sample. In the end, the procedure is completely like the one in the first scenario.
+</p>
 
+<p align="justify">
+  - Calibrating and predicting 65 LP fractions and subfractions measured using ultracentrifugation and presenting the normalized RMSEC (RMSECN) and RMSECV (RMSECVN) by dividing the original RMSEs by the median of each variable and then calculating the average of each RMSE for each #LVs. 
+</p>
+<p align="justify">
+  - The only difference between the first and second scenarios is that in the second scenario, the normalized RMSEs for each sample are calculated in the absence of the missing values (MVs) for that sample. In the end, the procedure is completely like the one in the first scenario.
 </p>
 
 ![Fig1](https://github.com/ashkantashk/Baseline_PLS2_Model/assets/53473481/89ca87c1-12a9-4dab-abef-3caecdc5e08c)
