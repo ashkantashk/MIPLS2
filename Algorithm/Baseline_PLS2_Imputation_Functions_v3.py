@@ -7,8 +7,10 @@ Comprised of a main function as for PLS2-based imputation ans several operationa
 
 List of the Functions:
 ---------------------
-1) PLS2Based_Imputation(XI, YI, App, Just_do_min, Opt_LV, Max_LV, cv_mode, NSplits, GM_type=None, plt_enb=None, YT=None) 
---> return YI_P1, YI_P2, predP1, predP2, MV, MV_new, MV_idx, LV_cnt, idxy, Intermediate_MV_idx, Lowest_MV_idx, Max_Value
+1) PLS2Based_Imputation(XI, YI, App, Just_do_min, Opt_LV, Max_LV, cv_mode, 
+NSplits, GM_type=None, plt_enb=None, YT=None, Thresh_itr = None, CNT=None, 
+Thresh = None, tmp_val=None, tmp_val2=None) --> return [YI_P1, YI_P2, predP1, predP2, 
+MV, MV_new, MV_idx, LV_cnt, idxy, Intermediate_MV_idx, Lowest_MV_idx, Max_Value]
 
 2) nd_rmse(A, B) --> r
     
