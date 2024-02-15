@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Feb. 15 2023
+Created on Fri Jan. 26 2023
 @author: Ashkan
 
 Comprised of a main function as for PLS2-based imputation ans several operational functions for a variety of applications
@@ -426,16 +426,25 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
            pred_ix = np.concatenate((c_ix, pi_ix))
            pred_cal = P.predict(np.concatenate((XIP, PXIP)))
            pred_cal = np.moveaxis(pred_cal, 0, 2)
-           
            # Pick optimal components
            opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
+           if tmp_val is not None:
+               opt_comps[opt_comps> tmp_val] = tmp_val
+           if tmp_val2 is not None:
+               opt_comps[opt_comps> tmp_val2] = tmp_val2
            if GM_type == 1:
                a1,b1 = np.unique(opt_comps, return_counts=True)
                LV_glob = a1[np.argmax(b1)]
            elif GM_type ==3:
-               LV_glob = np.argmin(rmse_cv.mean(axis=1))
+               LV_glob = np.argmin(rmse_cv.mean(axis=1))                        
            else:
                LV_glob = int(np.round(np.mean(opt_comps)))
+           if tmp_val2 is not None:
+               if LV_glob>tmp_val2:
+                   LV_glob = tmp_val2
+           if tmp_val is not None:
+               if LV_glob > tmp_val:
+                   LV_glob = tmp_val
            pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
            for n in range(pred_cal.shape[0]):
                for m in range(pred_cal.shape[1]):
@@ -641,18 +650,34 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 pred_ix = np.concatenate((c_ix, pi_ix))
                 pred_cal = P.predict(np.concatenate((XIP, PXIP)))
                 pred_cal = np.moveaxis(pred_cal, 0, 2)
-                
                 # Pick optimal components
                 opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
                 if tmp_val is not None:
-                    opt_comps[opt_comps> itr_tmp + tmp_val] = itr_tmp + tmp_val
+                    opt_comps[opt_comps> ii + tmp_val] = ii + tmp_val
+                if tmp_val2 is not None:
+                    if ii==0:
+                        opt_comps[opt_comps> tmp_val2] = tmp_val2
+                        opt_comps_old = np.copy(opt_comps)
+                    else:
+                        opt_comps = np.copy(opt_comps_old)+1
+                        opt_comps[opt_comps>Max_LV] = Max_LV
+                        opt_comps_old = np.copy(opt_comps)
                 if GM_type == 1:
                     a1,b1 = np.unique(opt_comps, return_counts=True)
                     LV_glob = a1[np.argmax(b1)]
                 elif GM_type ==3:
-                    LV_glob = np.argmin(rmse_cv.mean(axis=1))
+                    LV_glob = np.argmin(rmse_cv.mean(axis=1))                        
                 else:
                     LV_glob = int(np.round(np.mean(opt_comps)))
+                if tmp_val2 is not None:
+                    if ii==0:
+                        if LV_glob>tmp_val2:
+                            LV_glob = tmp_val2
+                        LV_glob_old = np.copy(LV_glob)
+                    else:
+                        LV_glob = LV_glob_old + 1
+                        if LV_glob>Max_LV:
+                            LV_glob = Max_LV + 1
                 if tmp_val is not None:
                     if LV_glob > ii + tmp_val:
                         LV_glob = ii + tmp_val
