@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Jan. 26 2023
+Created on Fri feb. 15 2023
 @author: Ashkan
 
 Comprised of a main function as for PLS2-based imputation ans several operational functions for a variety of applications
@@ -607,10 +607,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 # print(f'Iteration {iter+1} for {len(p_ix)} Samples has been completed.')
                 bar.update(iter)
         else:
-            itr_tmp = 0
-            # tmp_val = 12
             while len(p_ix) > 0:
-                itr_tmp+=1
                 Nsplits = np.copy(Nsplits_old)
                 Nsplits = Nsplits.tolist()
                 # Preprocess (autoscale) calibration data
@@ -653,9 +650,9 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 # Pick optimal components
                 opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
                 if tmp_val is not None:
-                    opt_comps[opt_comps> ii + tmp_val] = ii + tmp_val
+                    opt_comps[opt_comps> iter + tmp_val] = iter + tmp_val
                 if tmp_val2 is not None:
-                    if ii==0:
+                    if iter==0:
                         opt_comps[opt_comps> tmp_val2] = tmp_val2
                         opt_comps_old = np.copy(opt_comps)
                     else:
@@ -670,7 +667,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 else:
                     LV_glob = int(np.round(np.mean(opt_comps)))
                 if tmp_val2 is not None:
-                    if ii==0:
+                    if iter==0:
                         if LV_glob>tmp_val2:
                             LV_glob = tmp_val2
                         LV_glob_old = np.copy(LV_glob)
@@ -679,8 +676,8 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                         if LV_glob>Max_LV:
                             LV_glob = Max_LV + 1
                 if tmp_val is not None:
-                    if LV_glob > ii + tmp_val:
-                        LV_glob = ii + tmp_val
+                    if LV_glob > iter + tmp_val:
+                        LV_glob = iter + tmp_val
                 pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
                 for n in range(pred_cal.shape[0]):
                     for m in range(pred_cal.shape[1]):
