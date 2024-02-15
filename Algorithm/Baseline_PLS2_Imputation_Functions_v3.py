@@ -7,10 +7,8 @@ Comprised of a main function as for PLS2-based imputation ans several operationa
 
 List of the Functions:
 ---------------------
-1) PLS2Based_Imputation(XI, YI, App, Just_do_min, Opt_LV, Max_LV, cv_mode, 
-NSplits, GM_type=None, plt_enb=None, YT=None, Thresh_itr = None, CNT=None, 
-Thresh = None, tmp_val=None, tmp_val2=None) --> return [YI_P1, YI_P2, predP1, predP2, 
-MV, MV_new, MV_idx, LV_cnt, idxy, Intermediate_MV_idx, Lowest_MV_idx, Max_Value]
+1) PLS2Based_Imputation(XI, YI, App, Just_do_min, Opt_LV, Max_LV, cv_mode, NSplits, GM_type=None, plt_enb=None, YT=None) 
+--> return YI_P1, YI_P2, predP1, predP2, MV, MV_new, MV_idx, LV_cnt, idxy, Intermediate_MV_idx, Lowest_MV_idx, Max_Value
 
 2) nd_rmse(A, B) --> r
     
@@ -71,19 +69,23 @@ def handle_missing(X, copy=False):
 ## Search for the optimal no. LVs based on the first local minimum rule
 def optlv(rmsecv, default_comp = 0, shoulder_change_lim = 5, local_min_change = 1, startat = 0, just_do_min=None):# Added just_do_min=None to the code
 
+    # Find number of components based on CV rmse
+    # 0. Check for global minimum
     if just_do_min:
         return np.where(rmsecv == np.nanmin(rmsecv))[0][0]
 
-    # Find number of components based on CV rmse
+
     # 1. check for first local error minimum, but excpect min_change 
-    for n in range(startat+1, len(rmsecv)-1):
+    for n in range(startat+1, len(rmsecv)):
         if rmsecv[n-1] < rmsecv[n]:
             return n-1
 
     # 2. If no local minimum, find first shoulder (e.g. < n% rmsecv change between components)
-    for n in range(startat+1, len(rmsecv)-1):
+    for n in range(startat+1, len(rmsecv)):
         if np.abs(100-100*rmsecv[n-1]/rmsecv[n]) < shoulder_change_lim:
             return n-1
+    # 3. 
+    return len(rmsecv)-1
 
 def venetian_blinds_indices(data, num_splits= int, random_state=None, shuffle=None):
     if random_state != None:
