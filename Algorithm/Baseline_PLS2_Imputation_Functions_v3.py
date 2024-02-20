@@ -130,7 +130,6 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
     ## Inputs:
     # MV:
     MarkerLOT = ['o','d','s','*','v','^', '<','>','8','p','P','h','H','D','.','X'] # Marker lookup table
-    # Marker_1 = MarkerLOT[np.random.randint(1,len(MarkerLOT))]
     import math
     MV_1 = np.array(MV)
     idx_tmp = np.where(MV_idx_1[:,0]==n_idx)[0]
@@ -142,6 +141,12 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
         xx = range(1,lent+1)
         for ii in range(no_MV):
             MV_t[ii,:] = [MVt[ii+no_MV*jj] for jj in range(lent)]
+            import os
+            import random
+            # Generate a random seed
+            random_seed = int.from_bytes(os.urandom(4), byteorder="big")
+            # Set the random seed
+            random.seed(random_seed)
             col_map = np.random.rand(3, )
             if Log_plt_norm!=None:
                 if Log_plt_norm ==1:
@@ -303,7 +308,6 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
         YT_new = np.empty((YI.shape), dtype = np.float64)
         YT_new[-len(c_ix):,:] = YT[c_ix,:]
     #%%
-    iter = 0
     if Just_do_min:
         GM_type = gm_type # 1: most frequent LVs , 2: average LVs, 3: mean of minimums
     else:
@@ -326,6 +330,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
         # The best case is related to the samples with the lowest no. MVs
         Lowest_MV_idx = 1
         Max_Value = len(p_ix)
+        iter = 0
     elif App == 'A2xy' or App=='A3xy':
         St_idx = {}
         for n1 in range(1,len(uq_missing_yi_cnts[1:])+1):
@@ -432,10 +437,9 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
            pred_cal = np.moveaxis(pred_cal, 0, 2)
            # Pick optimal components
            opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
-           if tmp_val is not None:
-               opt_comps[opt_comps> tmp_val] = tmp_val
-           if tmp_val2 is not None:
-               opt_comps[opt_comps> tmp_val2] = tmp_val2
+           opt_comps[opt_comps> tmp_val] = tmp_val
+           # if tmp_val2 is not None:
+           #     opt_comps[opt_comps> tmp_val2] = tmp_val2
            if GM_type == 1:
                a1,b1 = np.unique(opt_comps, return_counts=True)
                LV_glob = a1[np.argmax(b1)]
@@ -443,12 +447,11 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                LV_glob = np.argmin(rmse_cv.mean(axis=1))                        
            else:
                LV_glob = int(np.round(np.mean(opt_comps)))
-           if tmp_val2 is not None:
-               if LV_glob>tmp_val2:
-                   LV_glob = tmp_val2
-           if tmp_val is not None:
-               if LV_glob > tmp_val:
-                   LV_glob = tmp_val
+           # if tmp_val2 is not None:
+           #     if LV_glob>tmp_val2:
+           #         LV_glob = tmp_val2
+           if LV_glob > tmp_val:
+               LV_glob = tmp_val
            pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
            for n in range(pred_cal.shape[0]):
                for m in range(pred_cal.shape[1]):
@@ -488,9 +491,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                        MV_idx.append([pred_ix[n], m])
            if len_old != len(c_ix)-len(pi_ix):
                pred_old = pred.copy()
-           iter+=1
-           # print(f'Iteration {iter+1} for {len(p_ix)} Samples has been completed.')
-           bar.update(iter)
+           bar.update(1)
         elif App == 'A2xy' or App == 'A3xy':
             for ii in range(len(KEYS1)):
                 Nsplits = np.copy(Nsplits_old)
@@ -536,15 +537,20 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 pred_cal = np.moveaxis(pred_cal, 0, 2)
                 # Pick optimal components
                 opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
-                if tmp_val is not None:
-                    opt_comps[opt_comps> ii + tmp_val] = ii + tmp_val
+                opt_comps[opt_comps> ii + tmp_val] = ii + tmp_val
                 if tmp_val2 is not None:
                     if ii==0:
-                        opt_comps[opt_comps> tmp_val2] = tmp_val2
+                        # opt_comps[opt_comps> tmp_val2] = tmp_val2
                         opt_comps_old = np.copy(opt_comps)
                     else:
-                        opt_comps = np.copy(opt_comps_old)+1
-                        opt_comps[opt_comps>Max_LV] = Max_LV
+                        tmp2 = opt_comps - opt_comps_old
+                        ind_pos = np.where((tmp2 != 1) & (tmp2>0))
+                        ind_neg = np.where((tmp2!=-1) & (tmp2<0))
+                        opt_comps[ind_pos] = opt_comps_old[ind_pos]+1 
+                        opt_comps[ind_neg] = opt_comps_old[ind_neg]-1
+                        # opt_comps = np.copy(opt_comps_old)+1
+                        opt_comps[opt_comps>=Max_LV] = Max_LV-1
+                        opt_comps[opt_comps<0] = 0
                         opt_comps_old = np.copy(opt_comps)
                 if GM_type == 1:
                     a1,b1 = np.unique(opt_comps, return_counts=True)
@@ -555,16 +561,22 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                     LV_glob = int(np.round(np.mean(opt_comps)))
                 if tmp_val2 is not None:
                     if ii==0:
-                        if LV_glob>tmp_val2:
-                            LV_glob = tmp_val2
+                        # if LV_glob>tmp_val2:
+                        #     LV_glob = tmp_val2
                         LV_glob_old = np.copy(LV_glob)
                     else:
-                        LV_glob = LV_glob_old + 1
-                        if LV_glob>Max_LV:
-                            LV_glob = Max_LV + 1
-                if tmp_val is not None:
-                    if LV_glob > ii + tmp_val:
-                        LV_glob = ii + tmp_val
+                        tmp2 = LV_glob - LV_glob_old
+                        if tmp2 > 1:
+                            LV_glob = LV_glob_old + 1
+                        elif tmp2<-1:
+                            LV_glob = LV_glob_old - 1
+                            
+                        if LV_glob>=Max_LV:
+                            LV_glob = Max_LV -1
+                        elif LV_glob<0:
+                            LV_glob = 0
+                if LV_glob > ii + tmp_val:
+                    LV_glob = ii + tmp_val
                 pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
                 for n in range(pred_cal.shape[0]):
                     for m in range(pred_cal.shape[1]):
@@ -607,9 +619,11 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                             MV_idx.append([pred_ix[n], m])
                 if len_old != len(c_ix)-len(pi_ix):
                     pred_old = pred.copy()
-                iter+=1
+                if tmp_val2 is not None:
+                    tmp_val2+=1
+                # iter+=1
                 # print(f'Iteration {iter+1} for {len(p_ix)} Samples has been completed.')
-                bar.update(iter)
+                bar.update(ii)
         else:
             while len(p_ix) > 0:
                 Nsplits = np.copy(Nsplits_old)
@@ -653,15 +667,20 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 pred_cal = np.moveaxis(pred_cal, 0, 2)
                 # Pick optimal components
                 opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
-                if tmp_val is not None:
-                    opt_comps[opt_comps> iter + tmp_val] = iter + tmp_val
+                opt_comps[opt_comps> iter + tmp_val] = iter + tmp_val
                 if tmp_val2 is not None:
                     if iter==0:
-                        opt_comps[opt_comps> tmp_val2] = tmp_val2
+                        # opt_comps[opt_comps> tmp_val2] = tmp_val2
                         opt_comps_old = np.copy(opt_comps)
                     else:
-                        opt_comps = np.copy(opt_comps_old)+1
-                        opt_comps[opt_comps>Max_LV] = Max_LV
+                        tmp2 = opt_comps - opt_comps_old
+                        ind_pos = np.where((tmp2 != 1) & (tmp2>0))
+                        ind_neg = np.where((tmp2!=-1) & (tmp2<0))
+                        opt_comps[ind_pos] = opt_comps_old[ind_pos]+1 
+                        opt_comps[ind_neg] = opt_comps_old[ind_neg]-1
+                        # opt_comps = np.copy(opt_comps_old)+1
+                        opt_comps[opt_comps>=Max_LV] = Max_LV-1
+                        opt_comps[opt_comps<0] = 0
                         opt_comps_old = np.copy(opt_comps)
                 if GM_type == 1:
                     a1,b1 = np.unique(opt_comps, return_counts=True)
@@ -672,16 +691,22 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                     LV_glob = int(np.round(np.mean(opt_comps)))
                 if tmp_val2 is not None:
                     if iter==0:
-                        if LV_glob>tmp_val2:
-                            LV_glob = tmp_val2
+                        # if LV_glob>tmp_val2:
+                        #     LV_glob = tmp_val2
                         LV_glob_old = np.copy(LV_glob)
                     else:
-                        LV_glob = LV_glob_old + 1
-                        if LV_glob>Max_LV:
-                            LV_glob = Max_LV + 1
-                if tmp_val is not None:
-                    if LV_glob > iter + tmp_val:
-                        LV_glob = iter + tmp_val
+                        tmp2 = LV_glob - LV_glob_old
+                        if tmp2 > 1:
+                            LV_glob = LV_glob_old + 1
+                        elif tmp2<-1:
+                            LV_glob = LV_glob_old - 1
+                            
+                        if LV_glob>=Max_LV:
+                            LV_glob = Max_LV -1
+                        elif LV_glob<0:
+                            LV_glob = 0
+                if LV_glob > iter + tmp_val:
+                    LV_glob = iter + tmp_val
                 pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
                 for n in range(pred_cal.shape[0]):
                     for m in range(pred_cal.shape[1]):
@@ -789,14 +814,16 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
         pred_cv = np.moveaxis(pred_cv, 0, 2)
         rmse_cv = nd_rmse(pred_cv, YIP)
-        
         # Do fit for imputation    
         P.fit(XIP, YIP, n_comps)
         pred_cal = P.predict(XIP)
         pred_cal = np.moveaxis(pred_cal, 0, 2)
-        
         # Pick optimal components
         opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
+        if tmp_val2 is not None:
+            opt_comps = np.copy(opt_comps_old)+1
+            opt_comps[opt_comps>Max_LV] = Max_LV
+            opt_comps_old = np.copy(opt_comps)
         if GM_type == 1:
             a1,b1 = np.unique(opt_comps, return_counts=True)
             LV_glob = a1[np.argmax(b1)]
@@ -804,6 +831,10 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
             LV_glob = np.argmin(rmse_cv.mean(axis=1))
         else:
             LV_glob = int(np.round(np.mean(opt_comps)))
+        if tmp_val2 is not None:
+           LV_glob = LV_glob_old + 1
+           if LV_glob>Max_LV:
+              LV_glob = Max_LV
         pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
         for n in range(pred_cal.shape[0]):
             for m in range(pred_cal.shape[1]):
