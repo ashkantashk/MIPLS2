@@ -84,7 +84,7 @@ def optlv(rmsecv, default_comp = 0, shoulder_change_lim = 5, local_min_change = 
     for n in range(startat+1, len(rmsecv)):
         if np.abs(100-100*rmsecv[n-1]/rmsecv[n]) < shoulder_change_lim:
             return n-1
-    # 3. 
+    # 3. If there is niether no local minimum nor first shoulder
     return len(rmsecv)-1
 
 def venetian_blinds_indices(data, num_splits= int, random_state=None, shuffle=None):
@@ -438,8 +438,8 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
            # Pick optimal components
            opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
            opt_comps[opt_comps> tmp_val] = tmp_val
-           # if tmp_val2 is not None:
-           #     opt_comps[opt_comps> tmp_val2] = tmp_val2
+           if tmp_val2 is not None:
+               opt_comps_old = np.copy(opt_comps)
            if GM_type == 1:
                a1,b1 = np.unique(opt_comps, return_counts=True)
                LV_glob = a1[np.argmax(b1)]
