@@ -833,7 +833,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
         if tmp_val2 is not None:
            LV_glob = LV_glob_old + 1
            if LV_glob>Max_LV:
-              LV_glob = Max_LV
+              LV_glob = Max_LV-1
         pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
         for n in range(pred_cal.shape[0]):
             for m in range(pred_cal.shape[1]):
