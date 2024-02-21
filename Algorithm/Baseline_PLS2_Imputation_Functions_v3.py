@@ -447,9 +447,8 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                LV_glob = np.argmin(rmse_cv.mean(axis=1))                        
            else:
                LV_glob = int(np.round(np.mean(opt_comps)))
-           # if tmp_val2 is not None:
-           #     if LV_glob>tmp_val2:
-           #         LV_glob = tmp_val2
+           if tmp_val2 is not None:
+               LV_glob_old = np.copy(LV_glob)
            if LV_glob > tmp_val:
                LV_glob = tmp_val
            pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
