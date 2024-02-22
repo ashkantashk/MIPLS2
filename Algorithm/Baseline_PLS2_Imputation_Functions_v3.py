@@ -376,7 +376,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
     Intermediate_MV_idx = np.argmin(abs(np.median(uq_missing_yi[1:])-uq_missing_yi[1:]))
     #%%
     # Do imputation
-    n_comps = Max_LV
+    n_comps = Max_LV 
     if YI.shape[0]>=YI.shape[1]:
         P = PLS(algorithm=1)
     else:
@@ -396,7 +396,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
     if Thresh_itr is None:
         Thresh_itr = 5e-2
     if tmp_val is None:
-        tmp_val = Max_LV
+        tmp_val = Max_LV -1 
     with progressbar.ProgressBar(max_value= Max_Value) as bar:
         if App == 'A0xy':
            Nsplits = np.copy(Nsplits_old).tolist()
@@ -821,7 +821,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
         opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
         if tmp_val2 is not None:
             opt_comps = np.copy(opt_comps_old)+1
-            opt_comps[opt_comps>Max_LV] = Max_LV
+            opt_comps[opt_comps>Max_LV] = Max_LV -1
             opt_comps_old = np.copy(opt_comps)
         if GM_type == 1:
             a1,b1 = np.unique(opt_comps, return_counts=True)
