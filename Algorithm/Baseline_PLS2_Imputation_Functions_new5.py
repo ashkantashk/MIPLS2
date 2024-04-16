@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Feb. 15 2023
+Created on Fri Feb. 15, 2023
 @author: Ashkan
 
-Comprised of a main function as for PLS2-based imputation ans several operational functions for a variety of applications
+Comprised a main function for PLS2-based imputation and several operational functions for a variety of applications
 
 List of the Functions:
 ---------------------
@@ -286,7 +286,7 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
 def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode, 
                          Nsplits, rnd_stat = None, gm_type=None, YT=None, 
                          Thresh_itr = None, CNT=None, Thresh = None, tmp_val=None, 
-                         tmp_val2=None,Strat_shuffle = None):
+                         tmp_val2=None,Strat_shuffle = None, verbose=None):
     # App: 
     #0) 'A0xy' --> A single stratification, solely with samples sorted in ascending order based on the number of Missing Values (MVs).
     #1) 'A1xy' --> Update per sample from the lowest no. MVs to the highest number
@@ -485,7 +485,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
            # Reverse preprocessing
            pred *= SIYC
            pred += MIYC
-           # TODO: Investigating the cases in which negative values imerge in the prediction
+           # Absolute of the cases in which negative values appear in the prediction
            pred = np.abs(pred)
            if len_old == len(c_ix)-len(pi_ix):
                pred_old = pred.copy()
@@ -504,7 +504,8 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                        MV_idx.append([pred_ix[n], m])
            if len_old != len(c_ix)-len(pi_ix):
                pred_old = pred.copy()
-           bar.update(1)
+           if verbose is not None:
+               bar.update(1)
         elif App == 'A2xy' or App == 'A3xy':
             for ii in range(len(KEYS1)):
                 Nsplits = np.copy(Nsplits_old)
@@ -633,10 +634,8 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                             MV_idx.append([pred_ix[n], m])
                 if len_old != len(c_ix)-len(pi_ix):
                     pred_old = pred.copy()
-                # if tmp_val2 is not None:
-                #     tmp_val2+=1
-                # print(f'Iteration {iter+1} for {len(p_ix)} Samples has been completed.')
-                bar.update(ii)
+                if verbose is not None:
+                    bar.update(ii)
         elif App =='A1xy':
             while len(p_ix) > 0:
                 Nsplits = np.copy(Nsplits_old)
@@ -760,8 +759,8 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 if len_old != len(c_ix)-len(pi_ix):
                     pred_old = pred.copy()
                 iter+=1
-                # print(f'Iteration {iter+1} for {len(p_ix)} Samples has been completed.')
-                bar.update(iter)
+                if verbose is not None:
+                    bar.update(iter)
     #%%
     YI_P1 = np.copy(YI)
     unique_pairs = {}
@@ -883,6 +882,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
         else:
             RMSE_new = root_mean_squared_error(YI_P2[idxy], YT[idxy])
             #RMSE_new1 = root_mean_squared_error(YI_P2, YT)
-        print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {np.abs(np.round(RMSE_new-RMSE_old,6))}')
+        if verbose is not None:
+            print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {np.abs(np.round(RMSE_new-RMSE_old,6))}')
     #%%
     return YI_P1, YI_P2, predP1, predP2, MV, MV_new, MV_idx, LV_cnt, idxy, Intermediate_MV_idx, Lowest_MV_idx, Max_Value
