@@ -1,4 +1,4 @@
-# PLS2-Based Imputation Method
+# Multivariate Imputation by PLS2-Based Modeling (MIPLSM)
 
 # Introduction
 This repository contains code and experimental data for a baseline PLS2-based imputation algorithm.
