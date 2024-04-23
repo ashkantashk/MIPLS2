@@ -22,14 +22,10 @@ The codes are available at both the main and the Revised_Versions Branches of th
 
 > The other codes in this repository are:
 
-> 1. 
+> 1. older version of the code with fewer list of input arguments 
 
-> 2. 
-
-* Note1: .
-* Note2: .
-* Note3: .
-* Note4: .
+* Note1: The code contains essential functions for its complete and flawless running.
+* Note2: The hyperparameters are adjusted and tuned based on the implementation results applied to the evaluation datasets.
   
 # Scripts
 1- Baseline_PLS2_Imputation_Functions_new.py
@@ -46,7 +42,7 @@ To observe the performance of the proposed PLS2-based imputation method, we impl
 </p>
 
 <p align="justify">
-  - Calibrating and predicting 65 LP fractions and subfractions measured using ultracentrifugation and presenting the normalized RMSEC (RMSECN) and RMSECV (RMSECVN) by dividing the original RMSEs by the median of each variable and then calculating the average of each RMSE for each #LVs. 
+  - Calibrating and predicting 64 LP fractions and subfractions measured using ultracentrifugation and presenting the normalized RMSEC (RMSECN) and RMSECV (RMSECVN) by dividing the original RMSEs by the median of each variable and then calculating the average of each RMSE for each number of latent variables (LVs). 
 </p>
 <p align="justify">
   - The only difference between the first and second scenarios is that in the second scenario, the normalized RMSEs for each sample are calculated in the absence of the missing values (MVs) for that sample. In the end, the procedure is completely like the one in the first scenario.
