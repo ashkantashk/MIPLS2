@@ -9,7 +9,7 @@ The current Code provides chemometricians the ability to predict and impute the 
 
 ![image](https://github.com/ashkantashk/MIPLSM/assets/53473481/a262d12a-5c54-4b9c-af10-eaced5b1d8b1)
 
-The codes are available at both the main and the Revised_Versions Branches of the current repository. 
+The codes are available at the current repository's main and the Revised_Versions Branches. 
 
 
 ## Running Codes
