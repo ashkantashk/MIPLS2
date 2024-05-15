@@ -8,6 +8,7 @@ The current Code provides chemometricians the ability to predict and impute the 
 </p>
 
 ![image](https://github.com/ashkantashk/MIPLS2/assets/53473481/d00a7829-e66e-4360-8585-c08dd16d08c9)
+Figure 1. Graphical visualization of the proposed PLS2-based imputation
 
 The codes are available at the current repository's main and the Revised_Versions Branches. 
 
@@ -24,8 +25,8 @@ The codes are available at the current repository's main and the Revised_Version
 
 > 1. older version of the code with fewer list of input arguments 
 
-* Note1: The code contains essential functions for its complete and flawless running.
-* Note2: The hyperparameters are adjusted and tuned based on the implementation results applied to the evaluation datasets.
+* Note 1: The code contains essential functions for its complete and flawless running.
+* Note 2: The hyperparameters are adjusted and tuned based on the implementation results applied to the evaluation datasets.
   
 # Scripts
 1- Baseline_PLS2_Imputation_Functions_new.py
@@ -37,21 +38,12 @@ This Python code script contains the code lines for implementing the baseline PL
 ## Descriptions
 
 <p align="justify">
-To observe the performance of the proposed PLS2-based imputation method, we implemented two scenarios: 
- Both scenarios follow the same procedure as follows:
+The proposed PLS2-based imputation method has an implementation based on the visualized flow block diagram in Figure 2:
 </p>
 
+![image](https://github.com/ashkantashk/MIPLS2/assets/53473481/137be895-4000-4722-9dbc-09b05d6c1676)
 <p align="justify">
-  - Calibrating and predicting 64 LP fractions and subfractions measured using ultracentrifugation and presenting the normalized RMSEC (RMSECN) and RMSECV (RMSECVN) by dividing the original RMSEs by the median of each variable and then calculating the average of each RMSE for each number of latent variables (LVs). 
+Figure 2. Functional flow block diagram for the two phases of the proposed PLS2-based imputation algorithm
 </p>
 <p align="justify">
-  - The only difference between the first and second scenarios is that in the second scenario, the normalized RMSEs for each sample are calculated in the absence of the missing values (MVs) for that sample. In the end, the procedure is completely like the one in the first scenario.
 </p>
-
-![Fig1](https://github.com/ashkantashk/Baseline_PLS2_Model/assets/53473481/89ca87c1-12a9-4dab-abef-3caecdc5e08c)
-
-Fig. 1. Results of Normalized RMSEC and RMSECV (% per Avg. for each uc variable) per. LVs ∈ [1,24] in the presence of MVs 
-
-![Fig2](https://github.com/ashkantashk/Baseline_PLS2_Model/assets/53473481/45a92290-520e-4045-bc3b-63c2d6b6511f)
-
-Fig. 2. Results of Normalized RMSEC and RMSECV (% per Avg. for each uc variable) per. LVs ∈ [1,24] by excluding MVs
