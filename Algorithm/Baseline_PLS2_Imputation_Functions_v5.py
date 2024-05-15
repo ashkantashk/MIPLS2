@@ -127,8 +127,22 @@ def rmse(predictions, targets):
 def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None, 
                     stp_xticks=None, legend=False, leg_font_size=None, 
                     Log_plt_norm = None, LV_param=None):
-    ## Inputs:
-    # MV:
+     ## Inputs:
+        ### Mandatory input arguments:
+        # MV: all the updates for existing MVs in the dataset
+        # no_Mv: number of MVs
+        # n_idx: the sample index 
+        # MV_idx_1: the indices of MVs in original dataset
+        # idxy: the indices of the original MVs in tuple format
+        # YT: The ground truth values for the missing values
+        ### Optional input variables:
+        # stp_xticks: the step size for the ticks belonging to x axis
+        # legend: descriptions of the real and converging trends of variables
+        # leg_font_size: the font size for the legend
+        # Log_plt_norm: plotting in a logarithmic format
+        # LV_param: comprising three data --> (1) LV_cnt: no. LVs at each step per MV
+        #                                     (2) unique_pairs: a dictionary of the unique pairs of LVs per MV
+        #                                     (3) Keys: the keys for the unique_pairs dictionary
     MarkerLOT = ['o','d','s','*','v','^', '<','>','8','p','P','h','H','D','.','X'] # Marker lookup table
     import math
     MV_1 = np.array(MV)
