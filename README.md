@@ -1,4 +1,4 @@
-# Multivariate Imputation by PLS2-Based Modeling (MIPLS2)
+# Multivariate Imputation by PLS2 (MIPLS2)
 
 # Introduction
 This repository contains code and experimental data for a baseline PLS2-based imputation algorithm.
