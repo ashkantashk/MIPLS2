@@ -396,7 +396,10 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
     #%%
     # Calculating the index of a sample with the intermediate no. MVs
     # The intermediate case is according to the samples with the median no. MVs
-    Intermediate_MV_idx = np.argmin(abs(np.median(uq_missing_yi[1:])-uq_missing_yi[1:]))
+    if len(uq_missing_yi)!=2:
+        Intermediate_MV_idx = np.argmin(abs(np.median(uq_missing_yi[1:])-uq_missing_yi[1:]))
+    else:
+        Intermediate_MV_idx == 1
     #%%
     # Do imputation
     n_comps = Max_LV 
