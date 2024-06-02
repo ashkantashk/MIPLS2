@@ -127,7 +127,7 @@ def rmse(predictions, targets):
 def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None, 
                     stp_xticks=None, legend=False, leg_font_size=None, 
                     Log_plt_norm = None, LV_param=None):
-     ## Inputs:
+    ## Inputs:
         ### Mandatory input arguments:
         # MV: all the updates for existing MVs in the dataset
         # no_Mv: number of MVs
@@ -399,7 +399,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
     if len(uq_missing_yi)!=2:
         Intermediate_MV_idx = np.argmin(abs(np.median(uq_missing_yi[1:])-uq_missing_yi[1:]))
     else:
-        Intermediate_MV_idx == 1
+        Intermediate_MV_idx = 1
     #%%
     # Do imputation
     n_comps = Max_LV 
@@ -417,7 +417,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
         rnd_stat = 42
     # Nsplits = 30
     Nsplits_old = np.copy(Nsplits).tolist()
-    #%%
+    #%% Pase I: predicting the samples with missing values and imputing them
     len_old = len(c_ix)
     if Thresh_itr is None:
         Thresh_itr = 0#5e-2
@@ -450,7 +450,8 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
            elif cv_mode=='Venetian':
                # Do CV fit
                pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-               cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, num_splits=Nsplits, random_state=rnd_stat, shuffle=True)
+               cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, num_splits=Nsplits, 
+                                                              random_state=None, shuffle=None)
                for cv_ix, v_ix in zip(cv_ix_all,vv_ix_all):
                    P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
                    pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
@@ -554,7 +555,10 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 elif cv_mode=='Venetian':
                     # Do CV fit
                     pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-                    cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, num_splits=Nsplits, random_state=rnd_stat, shuffle=True)
+                    cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, 
+                                                                   num_splits=Nsplits, 
+                                                                   random_state=None, 
+                                                                   shuffle=None)
                     for cv_ix, v_ix in zip(cv_ix_all,vv_ix_all):
                         P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
                         pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
@@ -563,7 +567,6 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 # Do fit for imputation    
                 P.fit(XIP, YIP, n_comps)
                 pred_ix = pi_ix
-                # pred_cal = P.predict(np.concatenate((XIP, PXIP)))
                 pred_cal = P.predict(np.concatenate((XIP, PXIP)))
                 pred_cal = np.moveaxis(pred_cal, 0, 2)
                 # Pick optimal components
@@ -651,7 +654,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                             MV_idx.append([pred_ix[n], m])
                 if len_old != len(c_ix)-len(pi_ix):
                     pred_old = pred.copy()
-                if verbose is not None:
+                if verbose is not None:#verbose!=None:
                     bar.update(ii)
         elif App =='A1xy':
             while len(p_ix) > 0:
@@ -678,12 +681,14 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                     pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
                     cv = model_selection.KFold(n_splits=Nsplits, random_state=rnd_stat, shuffle=True)
                     for cv_ix, v_ix in cv.split(X=XIP):
+                        
                         P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
                         pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
                 elif cv_mode=='Venetian':
                     # Do CV fit
                     pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-                    cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, num_splits=Nsplits, random_state=rnd_stat, shuffle=True)
+                    cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, num_splits=Nsplits, 
+                                                                   random_state=None, shuffle=None)
                     for cv_ix, v_ix in zip(cv_ix_all,vv_ix_all):
                         P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
                         pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
@@ -794,7 +799,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
     idxy[0] = [Keys[ii][0] for ii in range(len(Keys))]
     idxy[1] = [Keys[ii][1] for ii in range(len(Keys))]
     idxy = tuple(idxy)    
-    #%% Updating MVs until reaching a convergence
+    #%% Phase II: Updating MVs until reaching a convergence
     YI_P2 = np.copy(YI_P1)
     LV_cnt_new = []
     pred_old = np.copy(pred)
@@ -807,12 +812,12 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
     RMSE_new = 2*RMSE_old
     # RMSE_new1 = 2*RMSE_old1
     if CNT is None:
-        CNT = 401
+        CNT = 101
     CNT0 = np.copy(CNT)
     if Thresh is None:
-        Thresh = 5e-6
+        Thresh = 1e-6
     MV_new = np.array(MV[-len(Keys):])
-    while np.abs(RMSE_new-RMSE_old)>Thresh and CNT!=1: #and np.abs(RMSE_new1-RMSE_old1)>Thresh:
+    while (np.abs(RMSE_new-RMSE_old)/RMSE_old)>Thresh and CNT!=1: #and np.abs(RMSE_new1-RMSE_old1)>Thresh:
         Nsplits = np.copy(Nsplits_old)
         Nsplits = Nsplits.tolist()
         # Preprocess (autoscale) calibration data
@@ -833,18 +838,35 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
             pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
             cv = model_selection.KFold(n_splits=Nsplits, random_state=rnd_stat, shuffle=True)
             for c_ix, v_ix in cv.split(X=XIP):
-                P.fit(XIP[c_ix,:], YIP[c_ix, :], n_comps)
-                pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
+                MXC = XI[c_ix,:].mean(axis=0)
+                SXC = XI[c_ix,:].std(axis=0)
+                MYC = YI_P2[c_ix,:].mean(axis=0)
+                SYC = YI_P2[c_ix,:].std(axis=0)
+                XIC = (XI[c_ix,:] - MXC)/SXC
+                YIC = (YI_P2[c_ix,:] - MYC)/SYC
+                # P.fit(XIP[c_ix,:], YIP[c_ix, :], n_comps)
+                P.fit(XIC,YIC, n_comps)
+                # pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
+                pred_cv[:,v_ix,:] = P.predict(XI[v_ix,:]-MXC)*SYC+MYC
         elif cv_mode=='Venetian':
             # Do CV fit
             pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-            cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, num_splits=Nsplits, random_state=rnd_stat, shuffle=True)
+            cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, num_splits=Nsplits, 
+                                                           random_state=None, shuffle=None)
             for c_ix, v_ix in zip(cv_ix_all,vv_ix_all):
-                P.fit(XIP[c_ix,:], YIP[c_ix, :], n_comps)
-                pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
+                MXC = XI[c_ix,:].mean(axis=0)
+                SXC = XI[c_ix,:].std(axis=0)
+                MYC = YI_P2[c_ix,:].mean(axis=0)
+                SYC = YI_P2[c_ix,:].std(axis=0)
+                XIC = (XI[c_ix,:] - MXC)/SXC
+                YIC = (YI_P2[c_ix,:] - MYC)/SYC
+                # P.fit(XIP[c_ix,:], YIP[c_ix, :], n_comps)
+                P.fit(XIC,YIC, n_comps)
+                # pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
+                pred_cv[:,v_ix,:] = P.predict(XI[v_ix,:]-MXC)*SYC+MYC
         pred_cv = np.moveaxis(pred_cv, 0, 2)
-        rmse_cv = nd_rmse(pred_cv, YIP)
-        # Do fit for imputation    
+        rmse_cv = nd_rmse(pred_cv, YI_P2)
+        # Do fit for imputation   
         P.fit(XIP, YIP, n_comps)
         pred_cal = P.predict(XIP)
         pred_cal = np.moveaxis(pred_cal, 0, 2)
@@ -900,6 +922,6 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
             RMSE_new = root_mean_squared_error(YI_P2[idxy], YT[idxy])
             #RMSE_new1 = root_mean_squared_error(YI_P2, YT)
         if verbose is not None:
-            print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {np.abs(np.round(RMSE_new-RMSE_old,6))}')
+            print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {(np.abs(RMSE_new-RMSE_old)/RMSE_old).round(7)}')
     #%%
     return YI_P1, YI_P2, predP1, predP2, MV, MV_new, MV_idx, LV_cnt, idxy, Intermediate_MV_idx, Lowest_MV_idx, Max_Value
