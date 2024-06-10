@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Feb. 15, 2023
+Created on Fri Jun. 11, 2024
 @author: Ashkan
 
 Comprised a main function for PLS2-based imputation and several operational functions for a variety of applications
@@ -146,7 +146,10 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
     MarkerLOT = ['o','d','s','*','v','^', '<','>','8','p','P','h','H','D','.','X'] # Marker lookup table
     import math
     MV_1 = np.array(MV)
-    idx_tmp = np.where(MV_idx_1[:,0]==n_idx)[0]
+    if type(MV_idx_1) is np.ndarray:
+        idx_tmp = np.where(MV_idx_1[:,0]==n_idx)[0]
+    elif type(MV_idx_1) is list:
+        idx_tmp = np.where(np.array(MV_idx_1)[:,0]==n_idx)
     MVt = MV_1[idx_tmp]
     MVs_idx = idxy[1][np.where(idxy[0]==n_idx)].tolist()
     lent = int(len(MVt)/no_MV)
@@ -167,7 +170,7 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
                     Marker_1 = MarkerLOT[np.random.randint(1,len(MarkerLOT))]
                     plt.semilogy(xx,MV_t[ii,:]*100/YT[n_idx,MVs_idx[ii]], Marker_1, markersize=5, 
                                  color=col_map,linestyle='--',
-                               label=f'Pred. Results for MV#{ii+1} in sample #{n_idx}')
+                               label=f'Pred. Results for MV#{ii+1} in sample #{n_idx+1}')
                     if LV_param!=None:
                         LV_cnt = LV_param[0]
                         unique_pairs = LV_param[1]
@@ -181,7 +184,7 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
                     Marker_1 = MarkerLOT[np.random.randint(1,len(MarkerLOT))]
                     plt.loglog(xx,MV_t[ii,:]*100/YT[n_idx,MVs_idx[ii]],Marker_1, markersize=5,
                                color=col_map,linestyle='--',
-                               label=f'Pred. Results for MV#{ii+1} in sample #{n_idx}')
+                               label=f'Pred. Results for MV#{ii+1} in sample #{n_idx+1}')
                     if LV_param!=None:
                         LV_cnt = LV_param[0]
                         unique_pairs = LV_param[1]
@@ -195,7 +198,7 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
                 Marker_1 = MarkerLOT[np.random.randint(1,len(MarkerLOT))]
                 plt.plot(xx,MV_t[ii,:],Marker_1, markersize=5,
                          color=col_map,linestyle='--',
-                          label=f'Pred. Results for MV#{ii+1} in sample #{n_idx}')
+                          label=f'Pred. Results for MV#{ii+1} in sample #{n_idx+1}')
                 plt.plot(xx,np.repeat(YT[n_idx,MVs_idx[ii]],len(xx)),color=col_map,
                           linestyle = ':', label=f'Real Value for MV#{ii+1}')
                 if LV_param!=None:
@@ -259,7 +262,7 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
                 Marker_1 = MarkerLOT[np.random.randint(1,len(MarkerLOT))]
                 plt.plot(xx,MV_t[ii,:], Marker_1,markersize=5, 
                          color=col_map,linestyle='--',
-                         label=f'Pred. Results for MV#{ii+1} in sample #{n_idx}')
+                         label=f'Pred. Results for MV#{ii+1} in sample #{n_idx+1}')
                 plt.plot(xx,np.repeat(YT[n_idx,MVs_idx[ii]],len(xx)), 
                          color=col_map,#np.random.shuffle(col_map),
                           linestyle = 'dotted', linewidth = 3,
@@ -288,8 +291,8 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
         else:
             plt.xticks(np.arange(1,lent1+lent+1,stp_xticks))
     plt.xlabel('Iterations',fontsize=12)
-    plt.ylabel(f'Updates for MVs in sample#{n_idx}', fontsize=12)
-    plt.title(f'Iterative Changes for imputed MVs in sample#{n_idx}', fontsize=14)
+    plt.ylabel(f'Updates for MVs in sample#{n_idx+1}', fontsize=12)
+    plt.title(f'Iterative Changes for imputed MVs in sample#{n_idx+1}', fontsize=14)
     plt.grid(); 
     if legend:
         if leg_font_size == None:
@@ -430,8 +433,8 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
            MIXC = XI[c_ix,:].mean(axis=0)
            SIXC = XI[c_ix,:].std(axis=0)
            XIP = (XI[c_ix, :] - MIXC) / SIXC
-           MIYC = YI[c_ix].mean(axis=0)
-           SIYC = YI[c_ix].std(axis=0)
+           MIYC = YI[c_ix,:].mean(axis=0)
+           SIYC = YI[c_ix,:].std(axis=0)
            YIP = (YI[c_ix, :] - MIYC) / SIYC
            pi_ix = p_ix[0]
            PXIP = (XI[pi_ix, :] - MIXC) / SIXC
@@ -532,8 +535,8 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 MIXC = XI[c_ix,:].mean(axis=0)
                 SIXC = XI[c_ix,:].std(axis=0)
                 XIP = (XI[c_ix, :] - MIXC) / SIXC
-                MIYC = YI[c_ix].mean(axis=0)
-                SIYC = YI[c_ix].std(axis=0)
+                MIYC = YI[c_ix,:].mean(axis=0)
+                SIYC = YI[c_ix,:].std(axis=0)
                 YIP = (YI[c_ix, :] - MIYC) / SIYC
                 # Preprocess (autoscale) imputation row(s)
                 # This is one-strat-at-a-time:
@@ -664,8 +667,8 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 MIXC = XI[c_ix,:].mean(axis=0)
                 SIXC = XI[c_ix,:].std(axis=0)
                 XIP = (XI[c_ix, :] - MIXC) / SIXC
-                MIYC = YI[c_ix].mean(axis=0)
-                SIYC = YI[c_ix].std(axis=0)
+                MIYC = YI[c_ix,:].mean(axis=0)
+                SIYC = YI[c_ix,:].std(axis=0)
                 YIP = (YI[c_ix, :] - MIYC) / SIYC
                 # Preprocess (autoscale) imputation row(s)
                 # This is one-row-at-a-time :
@@ -817,7 +820,8 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
     if Thresh is None:
         Thresh = 1e-6
     MV_new = np.array(MV[-len(Keys):])
-    while (np.abs(RMSE_new-RMSE_old)/RMSE_old)>Thresh and CNT!=1: #and np.abs(RMSE_new1-RMSE_old1)>Thresh:
+    # while (np.abs(RMSE_new-RMSE_old)/RMSE_old)>Thresh and CNT!=1: #and np.abs(RMSE_new1-RMSE_old1)>Thresh:
+    while (np.abs(RMSE_new-RMSE_old))>Thresh and CNT!=1: #and np.abs(RMSE_new1-RMSE_old1)>Thresh:
         Nsplits = np.copy(Nsplits_old)
         Nsplits = Nsplits.tolist()
         # Preprocess (autoscale) calibration data
@@ -922,6 +926,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
             RMSE_new = root_mean_squared_error(YI_P2[idxy], YT[idxy])
             #RMSE_new1 = root_mean_squared_error(YI_P2, YT)
         if verbose is not None:
-            print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {(np.abs(RMSE_new-RMSE_old)/RMSE_old).round(7)}')
+            # print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {(np.abs(RMSE_new-RMSE_old)/RMSE_old).round(7)}')
+            print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {(np.abs(RMSE_new-RMSE_old)).round(7)}')
     #%%
     return YI_P1, YI_P2, predP1, predP2, MV, MV_new, MV_idx, LV_cnt, idxy, Intermediate_MV_idx, Lowest_MV_idx, Max_Value
