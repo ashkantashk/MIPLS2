@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Jun. 8, 2024
+Created on Fri Jun. 11, 2024
 @author: Ashkan
 
 Comprised a main function for PLS2-based imputation and several operational functions for a variety of applications
@@ -146,7 +146,10 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
     MarkerLOT = ['o','d','s','*','v','^', '<','>','8','p','P','h','H','D','.','X'] # Marker lookup table
     import math
     MV_1 = np.array(MV)
-    idx_tmp = np.where(MV_idx_1[:,0]==n_idx)[0]
+    if type(MV_idx_1) is np.ndarray:
+        idx_tmp = np.where(MV_idx_1[:,0]==n_idx)[0]
+    elif type(MV_idx_1) is list:
+        idx_tmp = np.where(np.array(MV_idx_1)[:,0]==n_idx)
     MVt = MV_1[idx_tmp]
     MVs_idx = idxy[1][np.where(idxy[0]==n_idx)].tolist()
     lent = int(len(MVt)/no_MV)
@@ -431,8 +434,8 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                MIXC = XI[c_ix,:].mean(axis=0)
                SIXC = XI[c_ix,:].std(axis=0)
                XIP = (XI[c_ix, :] - MIXC) / SIXC
-               MIYC = YI[c_ix].mean(axis=0)
-               SIYC = YI[c_ix].std(axis=0)
+               MIYC = YI[c_ix,:].mean(axis=0)
+               SIYC = YI[c_ix,:].std(axis=0)
                YIP = (YI[c_ix, :] - MIYC) / SIYC
                pi_ix = p_ix[0]
                PXIP = (XI[pi_ix, :] - MIXC) / SIXC
@@ -533,8 +536,8 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                     MIXC = XI[c_ix,:].mean(axis=0)
                     SIXC = XI[c_ix,:].std(axis=0)
                     XIP = (XI[c_ix, :] - MIXC) / SIXC
-                    MIYC = YI[c_ix].mean(axis=0)
-                    SIYC = YI[c_ix].std(axis=0)
+                    MIYC = YI[c_ix,:].mean(axis=0)
+                    SIYC = YI[c_ix,:].std(axis=0)
                     YIP = (YI[c_ix, :] - MIYC) / SIYC
                     # Preprocess (autoscale) imputation row(s)
                     # This is one-strat-at-a-time:
@@ -665,9 +668,9 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                     MIXC = XI[c_ix,:].mean(axis=0)
                     SIXC = XI[c_ix,:].std(axis=0)
                     XIP = (XI[c_ix, :] - MIXC) / SIXC
-                    MIYC = YI[c_ix].mean(axis=0)
-                    SIYC = YI[c_ix].std(axis=0)
-                    YIP = (YI[c_ix, :] - MIYC) / SIYC
+                    MIYC = YI[c_ix,:].mean(axis=0)
+                    SIYC = YI[c_ix,:].std(axis=0)
+                    YIP = (YI[c_ix,:] - MIYC) / SIYC
                     # Preprocess (autoscale) imputation row(s)
                     # This is one-row-at-a-time :
                     pi_ix = [p_ix[0]]
@@ -927,7 +930,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 # print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {(np.abs(RMSE_new-RMSE_old)/RMSE_old).round(7)}')
                 print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {(np.abs(RMSE_new-RMSE_old)).round(7)}')
     #%%
-    else:
+    elif uq_missing_yi_cnts[0]<=3 and uq_missing_yi_cnts[0]!=0:
         App = 'A0xy'        
         missing_yi = missingmap_yi.sum(axis=0)
         # Stratify Samples based on the no. MVs
@@ -1512,5 +1515,16 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
             if verbose is not None and verbose is not False and verbose is not False:
                 # print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {(np.abs(RMSE_new-RMSE_old)/RMSE_old).round(7)}')
                 print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {(np.abs(RMSE_new-RMSE_old)).round(7)}')    
+    elif uq_missing_yi_cnts[0]==0:
+        YYT = np.concatenate((XI,YI),axis=1)
+        from fancyimpute import IterativeImputer as fancy_Iterimputer
+        YI_P2 = fancy_Iterimputer().fit_transform(YYT)[:,-YI.shape[1]:]
+        uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(np.inan(YI).sum(axis=1), 
+                                                                         return_index=True, 
+                                                                         return_counts= True)
+        idxy = np.where(np.isnan(YI))
+        Intermediate_MV_idx = uq_missing_yi_idx[int(np.median(np.arange(0,len(uq_missing_yi_idx))))]
+        Lowest_MV_idx = uq_missing_yi_idx[1]
+        MV, MV_new, MV_idx, LV_cnt, Max_Value = []
     ########
     return YI_P1, YI_P2, predP1, predP2, MV, MV_new, MV_idx, LV_cnt, idxy, Intermediate_MV_idx, Lowest_MV_idx, Max_Value
