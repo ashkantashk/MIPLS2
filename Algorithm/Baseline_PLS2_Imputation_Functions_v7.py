@@ -1520,7 +1520,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
             YYT = np.concatenate((XI,YI),axis=1)
             from fancyimpute import IterativeImputer as fancy_Iterimputer
             YI_P2 = fancy_Iterimputer().fit_transform(YYT)[:,-YI.shape[1]:]
-            uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(np.inan(YI).sum(axis=1), 
+            uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(np.isnan(YI).sum(axis=1), 
                                                                              return_index=True, 
                                                                              return_counts= True)
             YI_P1 = np.copy(YI_P2)
@@ -1533,7 +1533,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
         YYT = np.concatenate((XI,YI),axis=1)
         from fancyimpute import IterativeImputer as fancy_Iterimputer
         YI_P2 = fancy_Iterimputer().fit_transform(YYT)[:,-YI.shape[1]:]
-        uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(np.inan(YI).sum(axis=1), 
+        uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(np.isnan(YI).sum(axis=1), 
                                                                          return_index=True, 
                                                                          return_counts= True)
         YI_P1 = np.copy(YI_P2)
