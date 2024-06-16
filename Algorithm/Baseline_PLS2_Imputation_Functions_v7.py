@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Feb. 15, 2023
+Created on Fri Jun. 15, 2024
 @author: Ashkan
 
 Comprised a main function for PLS2-based imputation and several operational functions for a variety of applications
@@ -38,6 +38,7 @@ import progressbar
 
 from ikpls.numpy_ikpls import PLS
 #%%
+
 def nd_rmse(A, B):
     # Calculates RMSE for A sample mode 0 and A variable mode 1, for each A componet mode 2,
     # where B is the reference with size of mode B0 == A0 and size of mode B1 == A1.
@@ -71,18 +72,17 @@ def optlv(rmsecv, default_comp = 0, shoulder_change_lim = 5, local_min_change = 
     # Find number of components based on CV rmse
     # 0. Check for global minimum
     if just_do_min:
-        tmp = np.where(rmsecv == np.nanmin(rmsecv))[0][0]
-        if tmp!=0:
-            return tmp
-        else:
-            tmp = np.where(rmsecv[1:] == np.nanmin(rmsecv[1:]))[0][0]
+        return np.where(rmsecv == np.nanmin(rmsecv))[0][0]
+
+
     # 1. check for first local error minimum, but excpect min_change 
     for n in range(startat+1, len(rmsecv)):
-        if rmsecv[n-1] < rmsecv[n] and n!=1 and n!=2:
+        if rmsecv[n-1] < rmsecv[n]:
             return n-1
+
     # 2. If no local minimum, find first shoulder (e.g. < n% rmsecv change between components)
     for n in range(startat+1, len(rmsecv)):
-        if np.abs(100-100*rmsecv[n-1]/rmsecv[n]) < shoulder_change_lim and n!=1 and n!=2:
+        if np.abs(100-100*rmsecv[n-1]/rmsecv[n]) < shoulder_change_lim:
             return n-1
     # 3. If there is niether no local minimum nor first shoulder
     return len(rmsecv)-1
@@ -170,7 +170,7 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
                     Marker_1 = MarkerLOT[np.random.randint(1,len(MarkerLOT))]
                     plt.semilogy(xx,MV_t[ii,:]*100/YT[n_idx,MVs_idx[ii]], Marker_1, markersize=5, 
                                  color=col_map,linestyle='--',
-                               label=f'Pred. Results for MV#{ii+1} in sample #{n_idx}')
+                               label=f'Pred. Results for MV#{ii+1} in sample #{n_idx+1}')
                     if LV_param!=None:
                         LV_cnt = LV_param[0]
                         unique_pairs = LV_param[1]
@@ -184,7 +184,7 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
                     Marker_1 = MarkerLOT[np.random.randint(1,len(MarkerLOT))]
                     plt.loglog(xx,MV_t[ii,:]*100/YT[n_idx,MVs_idx[ii]],Marker_1, markersize=5,
                                color=col_map,linestyle='--',
-                               label=f'Pred. Results for MV#{ii+1} in sample #{n_idx}')
+                               label=f'Pred. Results for MV#{ii+1} in sample #{n_idx+1}')
                     if LV_param!=None:
                         LV_cnt = LV_param[0]
                         unique_pairs = LV_param[1]
@@ -198,7 +198,7 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
                 Marker_1 = MarkerLOT[np.random.randint(1,len(MarkerLOT))]
                 plt.plot(xx,MV_t[ii,:],Marker_1, markersize=5,
                          color=col_map,linestyle='--',
-                          label=f'Pred. Results for MV#{ii+1} in sample #{n_idx}')
+                          label=f'Pred. Results for MV#{ii+1} in sample #{n_idx+1}')
                 plt.plot(xx,np.repeat(YT[n_idx,MVs_idx[ii]],len(xx)),color=col_map,
                           linestyle = ':', label=f'Real Value for MV#{ii+1}')
                 if LV_param!=None:
@@ -262,7 +262,7 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
                 Marker_1 = MarkerLOT[np.random.randint(1,len(MarkerLOT))]
                 plt.plot(xx,MV_t[ii,:], Marker_1,markersize=5, 
                          color=col_map,linestyle='--',
-                         label=f'Pred. Results for MV#{ii+1} in sample #{n_idx}')
+                         label=f'Pred. Results for MV#{ii+1} in sample #{n_idx+1}')
                 plt.plot(xx,np.repeat(YT[n_idx,MVs_idx[ii]],len(xx)), 
                          color=col_map,#np.random.shuffle(col_map),
                           linestyle = 'dotted', linewidth = 3,
@@ -291,8 +291,8 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
         else:
             plt.xticks(np.arange(1,lent1+lent+1,stp_xticks))
     plt.xlabel('Iterations',fontsize=12)
-    plt.ylabel(f'Updates for MVs in sample#{n_idx}', fontsize=12)
-    plt.title(f'Iterative Changes for imputed MVs in sample#{n_idx}', fontsize=14)
+    plt.ylabel(f'Updates for MVs in sample#{n_idx+1}', fontsize=12)
+    plt.title(f'Iterative Changes for imputed MVs in sample#{n_idx+1}', fontsize=14)
     plt.grid(); 
     if legend:
         if leg_font_size == None:
@@ -318,1110 +318,400 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
     missingmap_yi = np.isnan(YI)
     missing_yi = missingmap_yi.sum(axis=1)
     # Stratify Samples based on the no. MVs
-    uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(missing_yi, axis=0, return_counts=True, return_index=True)
+    uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(missing_yi, 
+                                                                     return_counts=True,
+                                                                     return_index=True)
     #%
     if Just_do_min:
         GM_type = gm_type # 1: most frequent LVs , 2: average LVs, 3: mean of minimums
     else:
         GM_type = 0
     #% Managing stratified samples:
-    if uq_missing_yi_cnts[0]>3 and uq_missing_yi[0]==0:
-        # Initial model on zero missing samples, and progressivly add missing samples    
-        c_ix = np.where(missing_yi == 0)[0]
-        ## New YT based on the new stratified and substratified samples with synthesized MVs
-        if YT is not None:
-            YT_new = np.empty((YI.shape), dtype = np.float64)
-            YT_new[-len(c_ix):,:] = YT[c_ix,:]
-        if App == 'A0xy':
-            # Initial model on zero missing samples, and progressivly add missing samples    
+    if uq_missing_yi[0]==0:
+        if uq_missing_yi_cnts[0]>2:
+            # Initial model on zero missing samples, and progressivly add missing samples
             c_ix = np.where(missing_yi == 0)[0]
-            p_ix = [np.where(missing_yi != 0)[0]]
+            init_len_cix = len(c_ix)
+        else:
+            cnt = uq_missing_yi_cnts[0]
+            init_len_cix = uq_missing_yi_cnts[0]
+            cnt1=1
+            tmp_mean = np.nanmean(YI,axis=0)
+            id_1 = np.where(np.isnan(tmp_mean))
+            tmp_mean[id_1] = 0
+            c_ix = np.array((1,2,3),dtype=np.int16)
+            c_ix[:cnt] = np.where(missing_yi==0)[0].tolist()
+            while cnt!=3:
+                tmp1 = np.where(missing_yi==uq_missing_yi[cnt1])[0]
+                diff1 = 3-cnt
+                tmp_idxy = np.where(np.isnan(YI[tmp1[:diff1],:]))[1]
+                YI[tmp1[:diff1].repeat(uq_missing_yi[cnt1]),tmp_idxy] = tmp_mean[tmp_idxy]
+                c_ix[cnt:cnt+len(tmp1[:3-cnt])] = tmp1[:diff1]
+                cnt += len(tmp1[:3-cnt])
+                if cnt!=3:
+                    cnt1+=1
+            missingmap_yi_copy = missingmap_yi.copy()
+            missingmap_yi = np.isnan(YI)
+            missing_yi = missingmap_yi.sum(axis=1)
+            # Stratify Samples based on the no. MVs
+            uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = \
+                np.unique(missing_yi, return_counts=True, return_index=True)
+    else:
+        init_len_cix = 3
+        c_ix = np.array((1,2,3),dtype=np.int16)
+        cnt = 0 
+        cnt1 = 0
+        tmp_mean = np.nanmean(YI,axis=0)
+        id_1 = np.where(np.isnan(tmp_mean))
+        tmp_mean[id_1] = 0
+        while cnt!=3:
+            tmp1 = np.where(missing_yi==uq_missing_yi[cnt1])[0]
+            diff1 = 3-cnt
+            tmp_idxy = np.where(np.isnan(YI[tmp1[:diff1],:]))[1]
+            YI[tmp1[:diff1].repeat(uq_missing_yi[cnt1]),tmp_idxy] = tmp_mean[tmp_idxy]
+            c_ix[cnt:cnt+len(tmp1[:3-cnt])] = tmp1[:diff1]
+            cnt += len(tmp1[:3-cnt])
+            if cnt!=3:
+                cnt1+=1
+    ## New YT based on the new stratified and substratified samples with synthesized MVs
+    if YT is not None:
+        YT_new = np.empty((YI.shape), dtype = np.float64)
+        YT_new[-len(c_ix):,:] = YT[c_ix,:]
+    #%% Managing stratified samples:
+    if App == 'A0xy':
+        YI = np.copy(YI1)
+        missing_yi = np.isnan(YI).sum(axis=1)
+        uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = \
+        np.unique(missing_yi,return_index=True,return_counts=True)
+        # Initial model on zero missing samples, and progressivly add missing samples    
+        if uq_missing_yi[0]==0:
+            if uq_missing_yi_cnts[0]>2:
+                # Initial model on zero missing samples, and progressivly add missing samples
+                c_ix = np.where(missing_yi == 0)[0]
+                init_len_cix = len(c_ix)
+            else:
+                cnt = uq_missing_yi_cnts[0]
+                init_len_cix = uq_missing_yi_cnts[0]
+                cnt1=1
+                tmp_mean = np.nanmean(YI,axis=0)
+                id_1 = np.where(np.isnan(tmp_mean))
+                tmp_mean[id_1] = 0
+                c_ix = np.array((1,2,3),dtype=np.int16)
+                c_ix[:cnt] = np.where(missing_yi==0)[0].tolist()
+                while cnt!=3:
+                    tmp1 = np.where(missing_yi==uq_missing_yi[cnt1])[0]
+                    diff1 = 3-cnt
+                    tmp_idxy = np.where(np.isnan(YI[tmp1[:diff1],:]))[1]
+                    YI[tmp1[:diff1].repeat(uq_missing_yi[cnt1]),tmp_idxy] = \
+                        tmp_mean[tmp_idxy]
+                    c_ix[cnt:cnt+len(tmp1[:3-cnt])] = tmp1[:diff1]
+                    cnt += len(tmp1[:3-cnt])
+                    if cnt!=3:
+                        cnt1+=1
+                missingmap_yi_copy = missingmap_yi.copy()
+                missingmap_yi = np.isnan(YI)
+                missing_yi = missingmap_yi.sum(axis=1)
+                # Stratify Samples based on the no. MVs
+                uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(missing_yi,
+                                                                                 return_counts=True, 
+                                                                                 return_index=True)
+        else:
+            init_len_cix = 3
+            c_ix = np.array((1,2,3),dtype=np.int16)
+            cnt = 0 
+            cnt1 = 0
+            tmp_mean = np.nanmean(YI,axis=0)
+            id_1 = np.where(np.isnan(tmp_mean))
+            tmp_mean[id_1] = 0
+            while cnt!=3:
+                tmp1 = np.where(missing_yi==uq_missing_yi[cnt1])[0]
+                diff1 = 3-cnt
+                tmp_idxy = np.where(np.isnan(YI[tmp1[:diff1],:]))[1]
+                YI[tmp1[:diff1].repeat(uq_missing_yi[cnt1]),tmp_idxy] = tmp_mean[tmp_idxy]
+                c_ix[cnt:cnt+len(tmp1[:3-cnt])] = tmp1[:diff1]
+                cnt += len(tmp1[:3-cnt])
+                if cnt!=3:
+                    cnt1+=1
+            missingmap_yi_copy = missingmap_yi.copy()
+            missingmap_yi = np.isnan(YI)
+            missing_yi = missingmap_yi.sum(axis=1)
+            # Stratify Samples based on the no. MVs
+            uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = \
+                np.unique(missing_yi, return_counts=True, return_index=True)
+        p_ix = [np.where(missing_yi != 0)[0]]
+        if Strat_shuffle is not None:
+            np.random.seed(Strat_shuffle)
+            np.random.shuffle(p_ix[0])
+        # The best case is related to the samples with the lowest no. MVs
+        Lowest_MV_idx = 1
+        Max_Value = len(p_ix)
+    if App == 'A1xy':
+        YI = np.copy(YI1)
+        missing_yi = np.isnan(YI).sum(axis=1)
+        uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = \
+        np.unique(missing_yi,return_index=True,return_counts=True)
+        # Initial model on zero missing samples, and progressivly add missing samples    
+        if uq_missing_yi[0]==0:
+            if uq_missing_yi_cnts[0]>2:
+                # Initial model on zero missing samples, and progressivly add missing samples
+                c_ix = np.where(missing_yi == 0)[0]
+                init_len_cix = len(c_ix)
+            else:
+                cnt = uq_missing_yi_cnts[0]
+                init_len_cix = uq_missing_yi_cnts[0]
+                cnt1=1
+                tmp_mean = np.nanmean(YI,axis=0)
+                id_1 = np.where(np.isnan(tmp_mean))
+                tmp_mean[id_1] = 0
+                c_ix = np.array((1,2,3),dtype=np.int16)
+                c_ix[:cnt] = np.where(missing_yi==0)[0].tolist()
+                while cnt!=3:
+                    tmp1 = np.where(missing_yi==uq_missing_yi[cnt1])[0]
+                    diff1 = 3-cnt
+                    tmp_idxy = np.where(np.isnan(YI[tmp1[:diff1],:]))[1]
+                    YI[tmp1[:diff1].repeat(uq_missing_yi[cnt1]),tmp_idxy] = \
+                        tmp_mean[tmp_idxy]
+                    c_ix[cnt:cnt+len(tmp1[:3-cnt])] = tmp1[:diff1]
+                    cnt += len(tmp1[:3-cnt])
+                    if cnt!=3:
+                        cnt1+=1
+                missingmap_yi_copy = missingmap_yi.copy()
+                missingmap_yi = np.isnan(YI)
+                missing_yi = missingmap_yi.sum(axis=1)
+                # Stratify Samples based on the no. MVs
+                uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = \
+                    np.unique(missing_yi, return_counts=True, return_index=True)
+        else:
+            init_len_cix = 3
+            c_ix = np.array((1,2,3),dtype=np.int16)
+            cnt = 0 
+            cnt1 = 0
+            tmp_mean = np.nanmean(YI,axis=0)
+            id_1 = np.where(np.isnan(tmp_mean))
+            tmp_mean[id_1] = 0
+            while cnt!=3:
+                tmp1 = np.where(missing_yi==uq_missing_yi[cnt1])[0]
+                diff1 = 3-cnt
+                tmp_idxy = np.where(np.isnan(YI[tmp1[:diff1],:]))[1]
+                YI[tmp1[:diff1].repeat(uq_missing_yi[cnt1]),tmp_idxy] = \
+                    tmp_mean[tmp_idxy]
+                c_ix[cnt:cnt+len(tmp1[:3-cnt])] = tmp1[:diff1]
+                cnt += len(tmp1[:3-cnt])
+                if cnt!=3:
+                    cnt1+=1
+            missingmap_yi_copy = missingmap_yi.copy()
+            missingmap_yi = np.isnan(YI)
+            missing_yi = missingmap_yi.sum(axis=1)
+            # Stratify Samples based on the no. MVs
+            uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(missing_yi,
+                                                                             return_counts=True, 
+                                                                             return_index=True)
+        p_ix = []
+        for n1 in uq_missing_yi[1:]:
+            for n2 in np.where(missing_yi == n1)[0]:
+                p_ix.append(n2)
+        # The best case is related to the samples with the lowest no. MVs
+        Lowest_MV_idx = 1
+        Max_Value = len(p_ix)
+        iter = 0
+    elif App == 'A2xy' or App=='A3xy':
+        St_idx = {}
+        for n1 in range(1,len(uq_missing_yi_cnts[1:])+1):
+            St_idx['S'+f'{n1}'] = np.where(missing_yi == uq_missing_yi[n1])[0]
             if Strat_shuffle is not None:
                 np.random.seed(Strat_shuffle)
-                np.random.shuffle(p_ix[0])
-            # The best case is related to the samples with the lowest no. MVs
-            Lowest_MV_idx = 1
-            Max_Value = len(p_ix)
-        if App == 'A1xy':
-            # Initial model on zero missing samples, and progressivly add missing samples    
-            c_ix = np.where(missing_yi == 0)[0]
-            p_ix = []
-            for n1 in uq_missing_yi[1:]:
-                for n2 in np.where(missing_yi == n1)[0]:
-                    p_ix.append(n2)
-            # The best case is related to the samples with the lowest no. MVs
-            Lowest_MV_idx = 1
-            Max_Value = len(p_ix)
-            iter = 0
-        elif App == 'A2xy' or App=='A3xy':
-            St_idx = {}
-            for n1 in range(1,len(uq_missing_yi_cnts[1:])+1):
-                St_idx['S'+f'{n1}'] = np.where(missing_yi == uq_missing_yi[n1])[0]
-                if Strat_shuffle is not None:
-                    np.random.seed(Strat_shuffle)
-                    np.random.shuffle(St_idx['S'+f'{n1}'])
+                np.random.shuffle(St_idx['S'+f'{n1}'])
+        KEYS1 = list(St_idx.keys())
+        Lowest_MV_idx = St_idx[KEYS1[0]][0]
+        # Initial model on zero missing samples, and progressivly add missing samples    
+        p_ix = []
+        for n1 in uq_missing_yi[1:]:
+            for n2 in np.where(missing_yi == n1)[0]:
+                p_ix.append(n2)
+        if App =='A3xy':
+            #% For approach A3xx
+            subSt_idxI = {}
+            # YI_new = np.copy(YT_new)
+            cnt = 0
+            ## Substratification:
+            for nn in KEYS1:
+                sub_YI = YI[St_idx[nn],:]
+                # sub_YT = YT[St_idx[nn],:]
+                # sub_XT = XT[St_idx[nn],:]
+                sub_mmap_yi = np.where(np.isnan(sub_YI))
+                _, uq_m_xi_cnt = np.unique(sub_mmap_yi[0], axis=0, return_counts=True)
+                subarrays = sub_mmap_yi[1].reshape(-1,uq_m_xi_cnt[0])
+                # subarrays = sub_mmap_yi[1].reshape(-1,1)
+                uq_m_yi, uq_m_yi_cnts = np.unique(subarrays, axis=0, return_counts=True)
+                cnt1=1
+                for ii,kk in enumerate(sorted(np.unique(uq_m_yi_cnts),reverse=True)):
+                    idt=np.where(uq_m_yi_cnts==kk)[0]
+                    for jj in range(len(idt)):
+                        idt1 = np.where((subarrays == uq_m_yi[idt[jj]]).all(axis=1))[0]
+                        subSt_idxI[nn +'_'+f'{ii+jj+cnt1}'] = St_idx[nn][idt1]
+                        # if Strat_shuffle is not None:
+                        #     np.random.shuffle(subSt_idxI[nn +'_'+f'{ii+jj+cnt1}'])
+                        cnt += len(idt1)
+                    cnt1+=(len(idt)-1)
+            St_idx = subSt_idxI.copy()
             KEYS1 = list(St_idx.keys())
+            # The best case is related to the samples with the lowest no. MVs
             Lowest_MV_idx = St_idx[KEYS1[0]][0]
-            # Initial model on zero missing samples, and progressivly add missing samples    
-            p_ix = []
-            for n1 in uq_missing_yi[1:]:
-                for n2 in np.where(missing_yi == n1)[0]:
-                    p_ix.append(n2)
-            if App =='A3xy':
-                #% For approach A3xx
-                subSt_idxI = {}
-                # YI_new = np.copy(YT_new)
-                cnt = 0
-                ## Substratification:
-                for nn in KEYS1:
-                    sub_YI = YI[St_idx[nn],:]
-                    # sub_YT = YT[St_idx[nn],:]
-                    # sub_XT = XT[St_idx[nn],:]
-                    sub_mmap_yi = np.where(np.isnan(sub_YI))
-                    _, uq_m_xi_cnt = np.unique(sub_mmap_yi[0], axis=0, return_counts=True)
-                    subarrays = sub_mmap_yi[1].reshape(-1,uq_m_xi_cnt[0])
-                    # subarrays = sub_mmap_yi[1].reshape(-1,1)
-                    uq_m_yi, uq_m_yi_cnts = np.unique(subarrays, axis=0, return_counts=True)
-                    cnt1=1
-                    for ii,kk in enumerate(sorted(np.unique(uq_m_yi_cnts),reverse=True)):
-                        idt=np.where(uq_m_yi_cnts==kk)[0]
-                        for jj in range(len(idt)):
-                            idt1 = np.where((subarrays == uq_m_yi[idt[jj]]).all(axis=1))[0]
-                            subSt_idxI[nn +'_'+f'{ii+jj+cnt1}'] = St_idx[nn][idt1]
-                            # if Strat_shuffle is not None:
-                            #     np.random.shuffle(subSt_idxI[nn +'_'+f'{ii+jj+cnt1}'])
-                            cnt += len(idt1)
-                        cnt1+=(len(idt)-1)
-                St_idx = subSt_idxI.copy()
-                KEYS1 = list(St_idx.keys())
-                # The best case is related to the samples with the lowest no. MVs
-                Lowest_MV_idx = St_idx[KEYS1[0]][0]
-            Max_Value = len(KEYS1)
-        #%
-        # Calculating the index of a sample with the intermediate no. MVs
-        # The intermediate case is according to the samples with the median no. MVs
-        if len(uq_missing_yi)!=2:
-            Intermediate_MV_idx = np.argmin(abs(np.median(uq_missing_yi[1:])-uq_missing_yi[1:]))
-        else:
-            Intermediate_MV_idx = 1
-        #%
-        # Do imputation
-        n_comps = Max_LV 
-        if YI.shape[0]>=YI.shape[1]:
-            P = PLS(algorithm=1)
-        else:
-            P = PLS(algorithm=2)
-        #%
-        # Variables for recording the iterative updates of MVs
-        MV = [] 
-        MV_idx = []
-        LV_cnt = []
-        #% Cross_validation mode
-        if rnd_stat is None:
-            rnd_stat = 42
-        # Nsplits = 30
-        Nsplits_old = np.copy(Nsplits).tolist()
-        ###### Phase I: predicting the samples with missing values and imputing them
-        len_old = len(c_ix)
-        if Thresh_itr is None:
-            Thresh_itr = 0#5e-2
-        if tmp_val is None:
-            tmp_val = Max_LV -1 
-        with progressbar.ProgressBar(max_value= Max_Value) as bar:
-            if App == 'A0xy':
-               Nsplits = np.copy(Nsplits_old).tolist()
-               # Preprocess (autoscale) calibration data
-               MIXC = XI[c_ix,:].mean(axis=0)
-               SIXC = XI[c_ix,:].std(axis=0)
-               XIP = (XI[c_ix, :] - MIXC) / SIXC
-               MIYC = YI[c_ix,:].mean(axis=0)
-               SIYC = YI[c_ix,:].std(axis=0)
-               YIP = (YI[c_ix, :] - MIYC) / SIYC
-               pi_ix = p_ix[0]
-               PXIP = (XI[pi_ix, :] - MIXC) / SIXC
-               if np.ndim(PXIP) == 1: # convert a 1D array into a 2D one with, e.g. converting from MX0 or 0xM into 1xM
-                   PXIP = PXIP.reshape(1,-1)
-               No_samples = len(XIP)
-               if Nsplits>No_samples:
-                  Nsplits = No_samples
-               if cv_mode == 'KFold':
-                   # Do CV fit
-                   pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-                   cv = model_selection.KFold(n_splits=Nsplits, random_state=rnd_stat, shuffle=True)
-                   for cv_ix, v_ix in cv.split(X=XIP):
-                       P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
-                       pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
-               elif cv_mode=='Venetian':
-                   # Do CV fit
-                   pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-                   cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, num_splits=Nsplits, 
-                                                                  random_state=None, shuffle=None)
-                   for cv_ix, v_ix in zip(cv_ix_all,vv_ix_all):
-                       P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
-                       pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
-               pred_cv = np.moveaxis(pred_cv, 0, 2)
-               rmse_cv = nd_rmse(pred_cv, YIP)
-               # Do fit for imputation    
-               P.fit(XIP, YIP, n_comps)
-               pred_ix = np.concatenate((c_ix, pi_ix))
-               pred_cal = P.predict(np.concatenate((XIP, PXIP)))
-               pred_cal = np.moveaxis(pred_cal, 0, 2)
-               # Pick optimal components
-               opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
-               opt_comps[opt_comps> tmp_val] = tmp_val
-               if tmp_val2 is not None:
-                   if tmp_val2>=0 and tmp_val2<=Max_LV-1:
-                       opt_comps[opt_comps> tmp_val2] = tmp_val2
-                   opt_comps_old = np.copy(opt_comps)
-               if GM_type == 1:
-                   a1,b1 = np.unique(opt_comps, return_counts=True)
-                   LV_glob = a1[np.argmax(b1)]
-               elif GM_type ==3:
-                   # LV_glob = np.argmin(rmse_cv.mean(axis=1))   
-                   LV_glob = np.argmin(rmse_cv.sum(axis=1))                        
-               else:
-                   LV_glob = int(np.round(np.mean(opt_comps)))
-               if tmp_val2 is not None:
-                   if tmp_val2>=0 and tmp_val2<=Max_LV-1 and LV_glob > tmp_val2:
-                       LV_glob = tmp_val2
-                   LV_glob_old = np.copy(LV_glob)
-               if LV_glob > tmp_val:
-                   LV_glob = tmp_val
-               pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
-               for n in range(pred_cal.shape[0]):
-                   for m in range(pred_cal.shape[1]):
-                       if Opt_LV == 'pervar':
-                           pred[n,m] = pred_cal[n,m,opt_comps[m]]
-                           if missingmap_yi[pred_ix[n], m]:
-                               LV_cnt.append(opt_comps[m]+1)
-                       elif Opt_LV == 'allvars':
-                           pred[n,m] = pred_cal[n,m,LV_glob]
-                           if missingmap_yi[pred_ix[n], m]:
-                               LV_cnt.append(LV_glob+1)
-               # Move imputed sample to calibration set
-               c_ix = np.append(c_ix, values=pi_ix)
-               p_ix = p_ix[len(pi_ix):]
-               if len(p_ix) ==0:
-                   predP1 = np.empty(pred.shape, dtype = np.float64)
-                   predP1[np.where(missingmap_yi)]=pred[np.where(missingmap_yi)].copy()
-               # Reverse preprocessing
-               pred *= SIYC
-               pred += MIYC
-               # Absolute of the cases in which negative values appear in the prediction
-               pred = np.abs(pred)
-               if len_old == len(c_ix)-len(pi_ix):
-                   pred_old = pred.copy()
-               else:
-                   pred_old = np.concatenate((pred_old,pred[pi_ix,:]))
-               # Replace original missing with predicted 
-               for n in range(pred.shape[0]):
-                   for m in range(pred.shape[1]):
-                       if missingmap_yi[pred_ix[n], m]:
-                           if abs(pred[n,m]-pred_old[n,m])/np.max([pred[n,m],pred_old[n,m]])<=Thresh_itr:
-                               YI[pred_ix[n], m] = pred[n,m]
-                               MV.append(pred[n,m])
-                           else:
-                               YI[pred_ix[n], m] = pred_old[n,m]
-                               MV.append(pred_old[n,m])
-                           MV_idx.append([pred_ix[n], m])
-               if len_old != len(c_ix)-len(pi_ix):
-                   pred_old = pred.copy()
-               if verbose is not None and verbose is not False:
-                   bar.update(1)
-            elif App == 'A2xy' or App == 'A3xy':
-                for ii in range(len(KEYS1)):
-                    Nsplits = np.copy(Nsplits_old)
-                    Nsplits = Nsplits.tolist()
-                    # Preprocess (autoscale) calibration data
-                    MIXC = XI[c_ix,:].mean(axis=0)
-                    SIXC = XI[c_ix,:].std(axis=0)
-                    XIP = (XI[c_ix, :] - MIXC) / SIXC
-                    MIYC = YI[c_ix,:].mean(axis=0)
-                    SIYC = YI[c_ix,:].std(axis=0)
-                    YIP = (YI[c_ix, :] - MIYC) / SIYC
-                    # Preprocess (autoscale) imputation row(s)
-                    # This is one-strat-at-a-time:
-                    p_ix = St_idx[KEYS1[ii]]
-                    pi_ix = np.append(c_ix, values = p_ix)
-                    PXIP = (XI[p_ix, :] - MIXC) / SIXC
-                    if np.ndim(PXIP) == 1:
-                        PXIP = PXIP.reshape(1,-1)
-                    No_samples = len(XIP)
-                    if Nsplits>No_samples:
-                       Nsplits = No_samples
-                    if cv_mode == 'KFold':
-                        # Do CV fit
-                        pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-                        cv = model_selection.KFold(n_splits=Nsplits, random_state=rnd_stat, shuffle=True)
-                        for cv_ix, v_ix in cv.split(X=XIP):
-                            P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
-                            pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
-                    elif cv_mode=='Venetian':
-                        # Do CV fit
-                        pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-                        cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, 
-                                                                       num_splits=Nsplits, 
-                                                                       random_state=None, 
-                                                                       shuffle=None)
-                        for cv_ix, v_ix in zip(cv_ix_all,vv_ix_all):
-                            P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
-                            pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
-                    pred_cv = np.moveaxis(pred_cv, 0, 2)
-                    rmse_cv = nd_rmse(pred_cv, YIP)
-                    # Do fit for imputation    
-                    P.fit(XIP, YIP, n_comps)
-                    pred_ix = pi_ix
-                    pred_cal = P.predict(np.concatenate((XIP, PXIP)))
-                    pred_cal = np.moveaxis(pred_cal, 0, 2)
-                    # Pick optimal components
-                    opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
-                    opt_comps[opt_comps> ii + tmp_val] = ii + tmp_val
-                    if tmp_val2 is not None:
-                        if ii==0:
-                            if tmp_val2>=0 and tmp_val2<=Max_LV-1:
-                                opt_comps[opt_comps>tmp_val2] = tmp_val2
-                            opt_comps_old = np.copy(opt_comps)
-                        else:
-                            tmp2 = opt_comps - opt_comps_old
-                            ind_pos = np.where((tmp2 != 1) & (tmp2>0))
-                            ind_neg = np.where((tmp2!=-1) & (tmp2<0))
-                            opt_comps[ind_pos] = opt_comps_old[ind_pos]+1 
-                            opt_comps[ind_neg] = opt_comps_old[ind_neg]-1
-                            # opt_comps = np.copy(opt_comps_old)+1
-                            opt_comps[opt_comps>=Max_LV] = Max_LV-1
-                            opt_comps[opt_comps<0] = 0
-                            opt_comps_old = np.copy(opt_comps)
-                    if GM_type == 1:
-                        a1,b1 = np.unique(opt_comps, return_counts=True)
-                        LV_glob = a1[np.argmax(b1)]
-                    elif GM_type ==3:
-                        # LV_glob = np.argmin(rmse_cv.mean(axis=1))                        
-                        LV_glob = np.argmin(rmse_cv.sum(axis=1))                        
-                    else:
-                        LV_glob = int(np.round(np.mean(opt_comps)))
-                    if tmp_val2 is not None:
-                        if ii==0:
-                            if tmp_val2>=0 and tmp_val2<=Max_LV-1:
-                                opt_comps[opt_comps>tmp_val2] = tmp_val2
-                            LV_glob_old = np.copy(LV_glob)
-                        else:
-                            tmp2 = LV_glob - LV_glob_old
-                            if tmp2 > 1:
-                                LV_glob = LV_glob_old + 1
-                            elif tmp2<-1:
-                                LV_glob = LV_glob_old - 1     
-                            if LV_glob>=Max_LV:
-                                LV_glob = Max_LV -1
-                            elif LV_glob<0:
-                                LV_glob = 0
-                    if LV_glob > ii + tmp_val:
-                        LV_glob = ii + tmp_val
-                    pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
-                    for n in range(pred_cal.shape[0]):
-                        for m in range(pred_cal.shape[1]):
-                            if Opt_LV == 'pervar':
-                                pred[n,m] = pred_cal[n,m,opt_comps[m]]
-                                if missingmap_yi[pred_ix[n], m]:
-                                    LV_cnt.append(opt_comps[m]+1)
-                            elif Opt_LV == 'allvars':
-                                pred[n,m] = pred_cal[n,m,LV_glob]
-                                if missingmap_yi[pred_ix[n], m]:
-                                    LV_cnt.append(LV_glob+1)
-                            
-                    # Move imputed sample to calibration set
-                    # c_ix = np.append(c_ix, values=pi_ix)
-                    c_ix = pi_ix
-                    if ii == len(KEYS1)-1:
-                        # predP = pred.copy()
-                        predP1 = np.empty(pred.shape, dtype = np.float64)
-                        predP1[np.where(missingmap_yi)]=pred[np.where(missingmap_yi)].copy()
-                    # Reverse preprocessing
-                    pred *= SIYC
-                    pred += MIYC
-                    # pred *= SIYP
-                    # pred += MIYP
-                    pred = np.abs(pred)
-                    if len_old == len(c_ix)-len(p_ix):
-                        pred_old = pred.copy()
-                    else:
-                        pred_old = np.concatenate((pred_old,pred[-len(p_ix):,:]))
-                    # Replace original missing with predicted 
-                    for n in range(pred.shape[0]):
-                        for m in range(pred.shape[1]):
-                            if missingmap_yi[pred_ix[n], m]:
-                                if abs(pred[n,m]-pred_old[n,m])/np.max([pred[n,m],pred_old[n,m]])<=Thresh_itr:
-                                    YI[pred_ix[n], m] = pred[n,m]
-                                    MV.append(pred[n,m])
-                                else:
-                                    YI[pred_ix[n], m] = pred_old[n,m]
-                                    MV.append(pred_old[n,m])
-                                MV_idx.append([pred_ix[n], m])
-                    if len_old != len(c_ix)-len(pi_ix):
-                        pred_old = pred.copy()
-                    if verbose is not None and verbose is not False:#verbose!=None:
-                        bar.update(ii)
-            elif App =='A1xy':
-                while len(p_ix) > 0:
-                    Nsplits = np.copy(Nsplits_old)
-                    Nsplits = Nsplits.tolist()
-                    # Preprocess (autoscale) calibration data
-                    MIXC = XI[c_ix,:].mean(axis=0)
-                    SIXC = XI[c_ix,:].std(axis=0)
-                    XIP = (XI[c_ix, :] - MIXC) / SIXC
-                    MIYC = YI[c_ix,:].mean(axis=0)
-                    SIYC = YI[c_ix,:].std(axis=0)
-                    YIP = (YI[c_ix,:] - MIYC) / SIYC
-                    # Preprocess (autoscale) imputation row(s)
-                    # This is one-row-at-a-time :
-                    pi_ix = [p_ix[0]]
-                    PXIP = (XI[pi_ix, :] - MIXC) / SIXC
-                    if np.ndim(PXIP) == 1: # convert a 1D array into a 2D one with, e.g. converting from MX0 or 0xM into 1xM
-                        PXIP = PXIP.reshape(1,-1)
-                    No_samples = len(XIP)
-                    if Nsplits>No_samples:
-                       Nsplits = No_samples
-                    if cv_mode == 'KFold':
-                        # Do CV fit
-                        pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-                        cv = model_selection.KFold(n_splits=Nsplits, random_state=rnd_stat, shuffle=True)
-                        for cv_ix, v_ix in cv.split(X=XIP):
-                            
-                            P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
-                            pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
-                    elif cv_mode=='Venetian':
-                        # Do CV fit
-                        pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-                        cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, num_splits=Nsplits, 
-                                                                       random_state=None, shuffle=None)
-                        for cv_ix, v_ix in zip(cv_ix_all,vv_ix_all):
-                            P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
-                            pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
-                    pred_cv = np.moveaxis(pred_cv, 0, 2)
-                    rmse_cv = nd_rmse(pred_cv, YIP)
-                    # Do fit for imputation    
-                    P.fit(XIP, YIP, n_comps)
-                    pred_ix = np.concatenate((c_ix, pi_ix))
-                    pred_cal = P.predict(np.concatenate((XIP, PXIP)))
-                    pred_cal = np.moveaxis(pred_cal, 0, 2)
-                    # Pick optimal components
-                    opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
-                    opt_comps[opt_comps> iter + tmp_val] = iter + tmp_val
-                    if tmp_val2 is not None:
-                        if iter==0:
-                            if tmp_val2>=0 and tmp_val2<=Max_LV-1:
-                                opt_comps[opt_comps>tmp_val2] = tmp_val2
-                            opt_comps_old = np.copy(opt_comps)
-                        else:
-                            tmp2 = opt_comps - opt_comps_old
-                            ind_pos = np.where((tmp2 != 1) & (tmp2>0))
-                            ind_neg = np.where((tmp2!=-1) & (tmp2<0))
-                            opt_comps[ind_pos] = opt_comps_old[ind_pos]+1 
-                            opt_comps[ind_neg] = opt_comps_old[ind_neg]-1
-                            opt_comps[opt_comps>=Max_LV] = Max_LV-1
-                            opt_comps[opt_comps<0] = 0
-                            opt_comps_old = np.copy(opt_comps)
-                    if GM_type == 1:
-                        a1,b1 = np.unique(opt_comps, return_counts=True)
-                        LV_glob = a1[np.argmax(b1)]
-                    elif GM_type ==3:
-                        # LV_glob = np.argmin(rmse_cv.mean(axis=1))                        
-                        LV_glob = np.argmin(rmse_cv.sum(axis=1))
-                    else:
-                        LV_glob = int(np.round(np.mean(opt_comps)))
-                    if tmp_val2 is not None:
-                        if iter==0:
-                            if tmp_val2>=0 and tmp_val2<=Max_LV-1:
-                                opt_comps[opt_comps> tmp_val2] = tmp_val2
-                            LV_glob_old = np.copy(LV_glob)
-                        else:
-                            tmp2 = LV_glob - LV_glob_old
-                            if tmp2 > 1:
-                                LV_glob = LV_glob_old + 1
-                            elif tmp2<-1:
-                                LV_glob = LV_glob_old - 1
-                                
-                            if LV_glob>=Max_LV:
-                                LV_glob = Max_LV -1
-                            elif LV_glob<0:
-                                LV_glob = 0
-                    if LV_glob > iter + tmp_val:
-                        LV_glob = iter + tmp_val
-                    pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
-                    for n in range(pred_cal.shape[0]):
-                        for m in range(pred_cal.shape[1]):
-                            if Opt_LV == 'pervar':
-                                pred[n,m] = pred_cal[n,m,opt_comps[m]]
-                                if missingmap_yi[pred_ix[n], m]:
-                                    LV_cnt.append(opt_comps[m]+1)
-                            elif Opt_LV == 'allvars':
-                                pred[n,m] = pred_cal[n,m,LV_glob]
-                                if missingmap_yi[pred_ix[n], m]:
-                                    LV_cnt.append(LV_glob+1)
-                    # Move imputed sample to calibration set
-                    c_ix = np.append(c_ix, values=pi_ix)
-                    p_ix = p_ix[len(pi_ix):]
-                    if len(p_ix) ==0:
-                        predP1 = np.empty(pred.shape, dtype = np.float64)
-                        predP1[np.where(missingmap_yi)]=pred[np.where(missingmap_yi)].copy()
-                    # Reverse preprocessing
-                    pred *= SIYC
-                    pred += MIYC
-                    pred = np.abs(pred)
-                    if len_old == len(c_ix)-len(pi_ix):
-                        pred_old = pred.copy()
-                    else:
-                        pred_old = np.concatenate((pred_old,pred[-1,:].reshape(1,-1)))
-                    # Replace original missing with predicted 
-                    for n in range(pred.shape[0]):
-                        for m in range(pred.shape[1]):
-                            if missingmap_yi[pred_ix[n], m]:
-                                if abs(pred[n,m]-pred_old[n,m])/np.max([pred[n,m],pred_old[n,m]])<=Thresh_itr:
-                                    YI[pred_ix[n], m] = pred[n,m]
-                                    MV.append(pred[n,m])
-                                else:
-                                    YI[pred_ix[n], m] = pred_old[n,m]
-                                    MV.append(pred_old[n,m])
-                                MV_idx.append([pred_ix[n], m])
-                    if len_old != len(c_ix)-len(pi_ix):
-                        pred_old = pred.copy()
-                    iter+=1
-                    if verbose is not None and verbose is not False:
-                        bar.update(iter)
-        #######################################################################
-        YI_P1 = np.copy(YI)
-        unique_pairs = {}
-        for index, inner_list in enumerate(MV_idx):
-            pair = tuple(inner_list)
-            if pair not in unique_pairs:
-                unique_pairs[pair] = [index]
-            else:
-                unique_pairs[pair].append(index)
-        Keys = list(unique_pairs.keys())
-        ## Plotting the updates of the selected MVs to observe their convergence trend 
-        #%
-        idxy = np.empty((2,len(Keys)), dtype=np.int64)
-        idxy[0] = [Keys[ii][0] for ii in range(len(Keys))]
-        idxy[1] = [Keys[ii][1] for ii in range(len(Keys))]
-        idxy = tuple(idxy)    
-        ###### Phase II: Updating MVs until reaching a convergence
-        YI_P2 = np.copy(YI_P1)
-        LV_cnt_new = []
-        pred_old = np.copy(pred)
-        if YT is None:
-            RMSE_old = 1
-            # RMSE_old1 = 1
-        else:
-            RMSE_old = root_mean_squared_error(YI_P1[idxy], YT[idxy])
-            # RMSE_old1 = root_mean_squared_error(YI_P1, YT)
-        RMSE_new = 2*RMSE_old
-        # RMSE_new1 = 2*RMSE_old1
-        if CNT is None:
-            CNT = 101
-        CNT0 = np.copy(CNT)
-        if Thresh is None:
-            Thresh = 1e-6
-        MV_new = np.array(MV[-len(Keys):])
-        # while (np.abs(RMSE_new-RMSE_old)/RMSE_old)>Thresh and CNT!=1: #and np.abs(RMSE_new1-RMSE_old1)>Thresh:
-        while (np.abs(RMSE_new-RMSE_old))>Thresh and CNT!=1: #and np.abs(RMSE_new1-RMSE_old1)>Thresh:
-            Nsplits = np.copy(Nsplits_old)
-            Nsplits = Nsplits.tolist()
-            # Preprocess (autoscale) calibration data
-            RMSE_old = RMSE_new
-            MIXC = XI.mean(axis=0)
-            SIXC = XI.std(axis=0)
-            XIP = (XI - MIXC) / SIXC
-    
-            MIYC = YI_P2.mean(axis=0)
-            SIYC = YI_P2.std(axis=0)
-            YIP = (YI_P2 - MIYC) / SIYC
-            
-            No_samples = len(XIP)
-            if Nsplits>No_samples:
-               Nsplits = No_samples
-            if cv_mode == 'KFold':
-                # Do CV fit
-                pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-                cv = model_selection.KFold(n_splits=Nsplits, random_state=rnd_stat, shuffle=True)
-                for c_ix, v_ix in cv.split(X=XIP):
-                    MXC = XI[c_ix,:].mean(axis=0)
-                    SXC = XI[c_ix,:].std(axis=0)
-                    MYC = YI_P2[c_ix,:].mean(axis=0)
-                    SYC = YI_P2[c_ix,:].std(axis=0)
-                    XIC = (XI[c_ix,:] - MXC)/SXC
-                    YIC = (YI_P2[c_ix,:] - MYC)/SYC
-                    # P.fit(XIP[c_ix,:], YIP[c_ix, :], n_comps)
-                    P.fit(XIC,YIC, n_comps)
-                    # pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
-                    pred_cv[:,v_ix,:] = P.predict(XI[v_ix,:]-MXC)*SYC+MYC
-            elif cv_mode=='Venetian':
-                # Do CV fit
-                pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-                cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, num_splits=Nsplits, 
-                                                               random_state=None, shuffle=None)
-                for c_ix, v_ix in zip(cv_ix_all,vv_ix_all):
-                    MXC = XI[c_ix,:].mean(axis=0)
-                    SXC = XI[c_ix,:].std(axis=0)
-                    MYC = YI_P2[c_ix,:].mean(axis=0)
-                    SYC = YI_P2[c_ix,:].std(axis=0)
-                    XIC = (XI[c_ix,:] - MXC)/SXC
-                    YIC = (YI_P2[c_ix,:] - MYC)/SYC
-                    # P.fit(XIP[c_ix,:], YIP[c_ix, :], n_comps)
-                    P.fit(XIC,YIC, n_comps)
-                    # pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
-                    pred_cv[:,v_ix,:] = P.predict(XI[v_ix,:]-MXC)*SYC+MYC
-            pred_cv = np.moveaxis(pred_cv, 0, 2)
-            rmse_cv = nd_rmse(pred_cv, YI_P2)
-            # Do fit for imputation   
-            P.fit(XIP, YIP, n_comps)
-            pred_cal = P.predict(XIP)
-            pred_cal = np.moveaxis(pred_cal, 0, 2)
-            # Pick optimal components
-            opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
-            if tmp_val2 is not None:
-                opt_comps = np.copy(opt_comps_old)+1
-                opt_comps[opt_comps>=Max_LV] = Max_LV -1
-                opt_comps_old = np.copy(opt_comps)
-            if GM_type == 1:
-                a1,b1 = np.unique(opt_comps, return_counts=True)
-                LV_glob = a1[np.argmax(b1)]
-            elif GM_type ==3:
-                LV_glob = np.argmin(rmse_cv.mean(axis=1))
-            else:
-                LV_glob = int(np.round(np.mean(opt_comps)))
-            if tmp_val2 is not None:
-               LV_glob = LV_glob_old + 1
-               if LV_glob>=Max_LV:
-                  LV_glob = Max_LV-1
-            pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
-            for n in range(pred_cal.shape[0]):
-                for m in range(pred_cal.shape[1]):
-                    if Opt_LV == 'pervar':
-                        pred[n,m] = pred_cal[n,m,opt_comps[m]]
-                        if missingmap_yi[pred_ix[n], m]:
-                            LV_cnt_new.append(opt_comps[m]+1)
-                    elif Opt_LV == 'allvars':
-                        pred[n,m] = pred_cal[n,m,LV_glob]
-                        if missingmap_yi[pred_ix[n], m]:
-                            LV_cnt_new.append(LV_glob+1)
-            # predP = pred.copy()
-            if YT is None:
-                predP2 = np.copy(YIP)
-            else:
-                YTP = (YT - YT.mean(axis=0)) / YT.std(axis=0)
-                predP2 = np.copy(YTP)
-            predP2[idxy]=pred[idxy]
-            # Reverse preprocessing
-            pred *= SIYC
-            pred += MIYC
-            pred = np.abs(pred)
-            # Replace original missing with predicted 
-            YI_Ptmp = np.copy(YI_P2)
-            YI_P2 = np.copy(YI1)
-            YI_P2[idxy] = pred[idxy]
-            MV_new = np.concatenate((MV_new, YI_P2[idxy]),axis=0)
-            CNT-=1
-            if YT is None:
-                RMSE_new = root_mean_squared_error(YI_P2[idxy], YI_Ptmp[idxy])
-                #RMSE_new1 = root_mean_squared_error(YI_P2, YI_Ptmp)
-            else:
-                RMSE_new = root_mean_squared_error(YI_P2[idxy], YT[idxy])
-                #RMSE_new1 = root_mean_squared_error(YI_P2, YT)
-            if verbose is not None and verbose is not False and verbose is not False:
-                # print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {(np.abs(RMSE_new-RMSE_old)/RMSE_old).round(7)}')
-                print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {(np.abs(RMSE_new-RMSE_old)).round(7)}')
+        Max_Value = len(KEYS1)
     #%%
-    elif uq_missing_yi_cnts[0]<=3:
-        App = 'A0xy'        
-        missing_yi = missingmap_yi.sum(axis=0)
-        # Stratify Samples based on the no. MVs
-        uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(missing_yi, axis=0, return_counts=True, return_index=True)
-        if uq_missing_yi[0]==0 and uq_missing_yi_cnts[0]>3:
-            c_ix = np.where(missing_yi == 0)[0]
-            ## New YT based on the new stratified and substratified samples with synthesized MVs
-            if YT is not None:
-                YT_new = np.empty((YI.shape[0],len(c_ix)), dtype = np.float64)
-                YT_new = YT[:,c_ix].copy()
-            if App == 'A0xy':
-                c_ix = np.where(missing_yi == 0)[0]
-                p_ix = [np.where(missing_yi != 0)[0]]
-                if Strat_shuffle is not None:
-                    np.random.seed(Strat_shuffle)
-                    np.random.shuffle(p_ix[0])
-                # The best case is related to the samples with the lowest no. MVs
-                Lowest_MV_idx = 1
-                Max_Value = len(p_ix)
-            if App == 'A1xy':
-                # Initial model on zero missing samples, and progressivly add missing samples    
-                c_ix = np.where(missing_yi == 0)[0]
-                p_ix = []
-                for n1 in uq_missing_yi[1:]:
-                    for n2 in np.where(missing_yi == n1)[0]:
-                        p_ix.append(n2)
-                # The best case is related to the samples with the lowest no. MVs
-                Lowest_MV_idx = 1
-                Max_Value = len(p_ix)
-                iter = 0
-            elif App == 'A2xy' or App=='A3xy':
-                St_idx = {}
-                for n1 in range(1,len(uq_missing_yi_cnts[1:])+1):
-                    St_idx['S'+f'{n1}'] = np.where(missing_yi == uq_missing_yi[n1])[0]
-                    if Strat_shuffle is not None:
-                        np.random.seed(Strat_shuffle)
-                        np.random.shuffle(St_idx['S'+f'{n1}'])
-                KEYS1 = list(St_idx.keys())
-                Lowest_MV_idx = St_idx[KEYS1[0]][0]
-                # Initial model on zero missing samples, and progressivly add missing samples    
-                p_ix = []
-                for n1 in uq_missing_yi[1:]:
-                    for n2 in np.where(missing_yi == n1)[0]:
-                        p_ix.append(n2)
-                if App =='A3xy':
-                    #% For approach A3xx
-                    subSt_idxI = {}
-                    # YI_new = np.copy(YT_new)
-                    cnt = 0
-                    ## Substratification:
-                    for nn in KEYS1:
-                        sub_YI = YI[St_idx[nn],:]
-                        # sub_YT = YT[St_idx[nn],:]
-                        # sub_XT = XT[St_idx[nn],:]
-                        sub_mmap_yi = np.where(np.isnan(sub_YI))
-                        _, uq_m_xi_cnt = np.unique(sub_mmap_yi[0], axis=0, return_counts=True)
-                        subarrays = sub_mmap_yi[1].reshape(-1,uq_m_xi_cnt[0])
-                        # subarrays = sub_mmap_yi[1].reshape(-1,1)
-                        uq_m_yi, uq_m_yi_cnts = np.unique(subarrays, axis=0, return_counts=True)
-                        cnt1=1
-                        for ii,kk in enumerate(sorted(np.unique(uq_m_yi_cnts),reverse=True)):
-                            idt=np.where(uq_m_yi_cnts==kk)[0]
-                            for jj in range(len(idt)):
-                                idt1 = np.where((subarrays == uq_m_yi[idt[jj]]).all(axis=1))[0]
-                                subSt_idxI[nn +'_'+f'{ii+jj+cnt1}'] = St_idx[nn][idt1]
-                                # if Strat_shuffle is not None:
-                                #     np.random.shuffle(subSt_idxI[nn +'_'+f'{ii+jj+cnt1}'])
-                                cnt += len(idt1)
-                            cnt1+=(len(idt)-1)
-                    St_idx = subSt_idxI.copy()
-                    KEYS1 = list(St_idx.keys())
-                    # The best case is related to the samples with the lowest no. MVs
-                    Lowest_MV_idx = St_idx[KEYS1[0]][0]
-                Max_Value = len(KEYS1)
-            #####
-            if len(uq_missing_yi)!=2:
-                Intermediate_MV_idx = np.argmin(abs(np.median(uq_missing_yi[1:])-uq_missing_yi[1:]))
-            else:
-                Intermediate_MV_idx = 1
-            #####
-            # Do imputation
-            n_comps = Max_LV 
-            if YI.shape[0]>=YI.shape[1]:
-                P = PLS(algorithm=1)
-            else:
-                P = PLS(algorithm=2)
-            #####
-            # Variables for recording the iterative updates of MVs
-            MV = [] 
-            MV_idx = []
-            LV_cnt = []
-            ##### Cross_validation mode
-            if rnd_stat is None:
-                rnd_stat = 42
-            # Nsplits = 30
-            Nsplits_old = np.copy(Nsplits).tolist()
-            ##### Phase I: predicting the samples with missing values and imputing them
-            len_old = len(c_ix)
-            if Thresh_itr is None:
-                Thresh_itr = 0#5e-2
-            if tmp_val is None:
-                tmp_val = Max_LV -1 
-            with progressbar.ProgressBar(max_value= Max_Value) as bar:
-                if App == 'A0xy':
-                   pi_ix = p_ix[0]
-                   pred_ix = np.concatenate((c_ix, pi_ix))
-                   YIP = YI[:,pred_ix]
-                   MYI = np.nanmean(YIP,axis=0)
-                   idxy = np.where(np.isnan(YIP))
-                   YIP[idxy] = np.take(MYI,idxy[1])
-                   Nsplits = np.copy(Nsplits_old).tolist()
-                   No_samples = len(XI)
-                   if Nsplits>No_samples:
-                      Nsplits = No_samples
-                   if cv_mode == 'KFold':
-                       # Do CV fit
-                       pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-                       cv = model_selection.KFold(n_splits=Nsplits, random_state=rnd_stat, shuffle=True)
-                       for cv_ix, v_ix in cv.split(X=XI):
-                           MXC = XI[cv_ix,:].mean(axis=0)
-                           MYC = YIP[cv_ix,:].mean(axis=0)
-                           SYC = YIP[cv_ix,:].std(axis=0)
-                           P.fit(XI[cv_ix,:]-MXC, (YIP[cv_ix,:]-MYC)/SYC, n_comps)
-                           pred_cv[:,v_ix,:] = P.predict(XI[v_ix,:]-MXC)*SYC+MYC
-                   elif cv_mode=='Venetian':
-                       # Do CV fit
-                       pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-                       cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, num_splits=Nsplits, 
-                                                                      random_state=None, shuffle=None)
-                       for cv_ix, v_ix in zip(cv_ix_all,vv_ix_all):
-                           MXC = XI[cv_ix,:].mean(axis=0)
-                           MYC = YIP[cv_ix,:].mean(axis=0)
-                           SYC = YIP[cv_ix,:].std(axis=0)
-                           P.fit(XI[cv_ix,:]-MXC, (YIP[cv_ix,:]-MYC)/SYC, n_comps)
-                           pred_cv[:,v_ix,:] = P.predict(XI[v_ix,:]-MXC)*SYC+MYC
-                   pred_cv = np.moveaxis(pred_cv, 0, 2)
-                   rmse_cv = nd_rmse(pred_cv, YIP)
-                   # Do fit for imputation    
-                   P.fit(XI-XI.mean(axis=0), (YIP-YIP.mean(axis=0))/YIP.std(axis=0), n_comps)
-                   pred_cal = P.predict(XI-XI.mean(axis=0))*YIP.std(axis=0)+YIP.mean(axis=0)
-                   pred_cal = np.moveaxis(pred_cal, 0, 2)
-                   # Pick optimal components
-                   opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
-                   opt_comps[opt_comps> tmp_val] = tmp_val
-                   if tmp_val2 is not None:
-                       if tmp_val2>=0 and tmp_val2<=Max_LV-1:
-                           opt_comps[opt_comps> tmp_val2] = tmp_val2
-                       opt_comps_old = np.copy(opt_comps)
-                   if gm_type ==3:
-                       LV_glob = np.argmin(rmse_cv.sum(axis=1))                        
-                   else:
-                       LV_glob = find_comps(rmse_cv.mean(axis=1).reshape(-1,1), just_do_min=None)
-                   if tmp_val2 is not None:
-                       if tmp_val2>=0 and tmp_val2<=Max_LV-1 and LV_glob > tmp_val2:
-                           LV_glob = tmp_val2
-                       LV_glob_old = np.copy(LV_glob)
-                   if LV_glob > tmp_val:
-                       LV_glob = tmp_val
-                   pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
-                   for n in range(pred_cal.shape[0]):
-                       for m in range(pred_cal.shape[1]):
-                           if Opt_LV == 'pervar':
-                               pred[n,m] = pred_cal[n,m,opt_comps[m]]
-                               if missingmap_yi[n, pred_ix[m]]:
-                                   LV_cnt.append(opt_comps[m]+1)
-                           elif Opt_LV == 'allvars':
-                               pred[n,m] = pred_cal[n,m,LV_glob]
-                               if missingmap_yi[n, pred_ix[m]]:
-                                   LV_cnt.append(LV_glob+1)
-                   # Move imputed sample to calibration set
-                   c_ix = np.append(c_ix, values=pi_ix)
-                   p_ix = p_ix[len(pi_ix):]
-                   if len(p_ix) ==0:
-                       predP1 = np.empty(pred.shape, dtype = np.float64)
-                       predP1[np.where(missingmap_yi)]=pred[np.where(missingmap_yi)].copy()
-                   # Absolute of the cases in which negative values appear in the prediction
-                   pred = np.abs(pred)
-                   if len_old == len(c_ix)-len(pi_ix):
-                       pred_old = pred.copy()
-                   else:
-                       pred_old = np.concatenate((pred_old,pred[pi_ix,:]))
-                   # Replace original missing with predicted 
-                   for n in range(pred.shape[0]):
-                       for m in range(pred.shape[1]):
-                           if missingmap_yi[n, pred_ix[m]]:
-                               if abs(pred[n,m]-pred_old[n,m])/np.max([pred[n,m],pred_old[n,m]])<=Thresh_itr:
-                                   YI[n,pred_ix[m]] = pred[n,m]
-                                   MV.append(pred[n,m])
-                               else:
-                                   YI[n, pred_ix[m]] = pred_old[n,m]
-                                   MV.append(pred_old[n,m])
-                               MV_idx.append([n, pred_ix[m]])
-                   if len_old != len(c_ix)-len(pi_ix):
-                       pred_old = pred.copy()
-                   if verbose is not None and verbose is not False:
-                       bar.update(1)
-                elif App == 'A2xy' or App == 'A3xy':
-                    for ii in range(len(KEYS1)):
-                        Nsplits = np.copy(Nsplits_old)
-                        Nsplits = Nsplits.tolist()
-                        # Preprocess (autoscale) imputation row(s)
-                        # This is one-strat-at-a-time:
-                        p_ix = St_idx[KEYS1[ii]]
-                        pi_ix = np.append(c_ix, values = p_ix)
-                        PXIP = (XI[p_ix, :] - MIXC) / SIXC
-                        if np.ndim(PXIP) == 1:
-                            PXIP = PXIP.reshape(1,-1)
-                        No_samples = len(XIP)
-                        if Nsplits>No_samples:
-                           Nsplits = No_samples
-                        if cv_mode == 'KFold':
-                            # Do CV fit
-                            pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-                            cv = model_selection.KFold(n_splits=Nsplits, random_state=rnd_stat, shuffle=True)
-                            for cv_ix, v_ix in cv.split(X=XIP):
-                                P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
-                                pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
-                        elif cv_mode=='Venetian':
-                            # Do CV fit
-                            pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-                            cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, 
-                                                                           num_splits=Nsplits, 
-                                                                           random_state=None, 
-                                                                           shuffle=None)
-                            for cv_ix, v_ix in zip(cv_ix_all,vv_ix_all):
-                                P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
-                                pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
-                        pred_cv = np.moveaxis(pred_cv, 0, 2)
-                        rmse_cv = nd_rmse(pred_cv, YIP)
-                        # Do fit for imputation    
-                        P.fit(XIP, YIP, n_comps)
-                        pred_ix = pi_ix
-                        pred_cal = P.predict(np.concatenate((XIP, PXIP)))
-                        pred_cal = np.moveaxis(pred_cal, 0, 2)
-                        # Pick optimal components
-                        opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
-                        opt_comps[opt_comps> ii + tmp_val] = ii + tmp_val
-                        if tmp_val2 is not None:
-                            if ii==0:
-                                if tmp_val2>=0 and tmp_val2<=Max_LV-1:
-                                    opt_comps[opt_comps>tmp_val2] = tmp_val2
-                                opt_comps_old = np.copy(opt_comps)
-                            else:
-                                tmp2 = opt_comps - opt_comps_old
-                                ind_pos = np.where((tmp2 != 1) & (tmp2>0))
-                                ind_neg = np.where((tmp2!=-1) & (tmp2<0))
-                                opt_comps[ind_pos] = opt_comps_old[ind_pos]+1 
-                                opt_comps[ind_neg] = opt_comps_old[ind_neg]-1
-                                # opt_comps = np.copy(opt_comps_old)+1
-                                opt_comps[opt_comps>=Max_LV] = Max_LV-1
-                                opt_comps[opt_comps<0] = 0
-                                opt_comps_old = np.copy(opt_comps)
-                        if GM_type == 1:
-                            a1,b1 = np.unique(opt_comps, return_counts=True)
-                            LV_glob = a1[np.argmax(b1)]
-                        elif GM_type ==3:
-                            # LV_glob = np.argmin(rmse_cv.mean(axis=1))                        
-                            LV_glob = np.argmin(rmse_cv.sum(axis=1))                        
-                        else:
-                            LV_glob = int(np.round(np.mean(opt_comps)))
-                        if tmp_val2 is not None:
-                            if ii==0:
-                                if tmp_val2>=0 and tmp_val2<=Max_LV-1:
-                                    opt_comps[opt_comps>tmp_val2] = tmp_val2
-                                LV_glob_old = np.copy(LV_glob)
-                            else:
-                                tmp2 = LV_glob - LV_glob_old
-                                if tmp2 > 1:
-                                    LV_glob = LV_glob_old + 1
-                                elif tmp2<-1:
-                                    LV_glob = LV_glob_old - 1     
-                                if LV_glob>=Max_LV:
-                                    LV_glob = Max_LV -1
-                                elif LV_glob<0:
-                                    LV_glob = 0
-                        if LV_glob > ii + tmp_val:
-                            LV_glob = ii + tmp_val
-                        pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
-                        for n in range(pred_cal.shape[0]):
-                            for m in range(pred_cal.shape[1]):
-                                if Opt_LV == 'pervar':
-                                    pred[n,m] = pred_cal[n,m,opt_comps[m]]
-                                    if missingmap_yi[pred_ix[n], m]:
-                                        LV_cnt.append(opt_comps[m]+1)
-                                elif Opt_LV == 'allvars':
-                                    pred[n,m] = pred_cal[n,m,LV_glob]
-                                    if missingmap_yi[pred_ix[n], m]:
-                                        LV_cnt.append(LV_glob+1)
-                                
-                        # Move imputed sample to calibration set
-                        # c_ix = np.append(c_ix, values=pi_ix)
-                        c_ix = pi_ix
-                        if ii == len(KEYS1)-1:
-                            # predP = pred.copy()
-                            predP1 = np.empty(pred.shape, dtype = np.float64)
-                            predP1[np.where(missingmap_yi)]=pred[np.where(missingmap_yi)].copy()
-                        # Reverse preprocessing
-                        pred *= SIYC
-                        pred += MIYC
-                        # pred *= SIYP
-                        # pred += MIYP
-                        pred = np.abs(pred)
-                        if len_old == len(c_ix)-len(p_ix):
-                            pred_old = pred.copy()
-                        else:
-                            pred_old = np.concatenate((pred_old,pred[-len(p_ix):,:]))
-                        # Replace original missing with predicted 
-                        for n in range(pred.shape[0]):
-                            for m in range(pred.shape[1]):
-                                if missingmap_yi[pred_ix[n], m]:
-                                    if abs(pred[n,m]-pred_old[n,m])/np.max([pred[n,m],pred_old[n,m]])<=Thresh_itr:
-                                        YI[pred_ix[n], m] = pred[n,m]
-                                        MV.append(pred[n,m])
-                                    else:
-                                        YI[pred_ix[n], m] = pred_old[n,m]
-                                        MV.append(pred_old[n,m])
-                                    MV_idx.append([pred_ix[n], m])
-                        if len_old != len(c_ix)-len(pi_ix):
-                            pred_old = pred.copy()
-                        if verbose is not None and verbose is not False:#verbose!=None:
-                            bar.update(ii)
-                elif App =='A1xy':
-                    Pred = np.empty((YI.shape),dtype=np.float64)
-                    Pred[:,c_ix] = YI[:,c_ix]
-                    while len(p_ix) > 0:
-                        Nsplits = np.copy(Nsplits_old)
-                        Nsplits = Nsplits.tolist()
-                        # This is one-column-at-a-time:
-                        pi_ix = [p_ix[0]]
-                        No_samples = len(XI)
-                        YI_tmp = YI[:,pi_ix]
-                        YIP = np.concatenate((YI[:,c_ix],YI_tmp),axis=-1)
-                        MYI = np.nanmean(YIP,axis=0)
-                        idxy = np.where(np.isnan(YIP))
-                        YIP[idxy] = np.take(MYI,idxy[1])
-                        if Nsplits>No_samples:
-                           Nsplits = No_samples
-                        if cv_mode == 'KFold':
-                            # Do CV fit
-                            pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-                            cv = model_selection.KFold(n_splits=Nsplits, random_state=rnd_stat, shuffle=True)
-                            for cv_ix, v_ix in cv.split(X=XI):
-                                P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
-                                pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
-                        elif cv_mode=='Venetian':
-                            # Do CV fit
-                            pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
-                            cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, num_splits=Nsplits, 
-                                                                           random_state=None, shuffle=None)
-                            for cv_ix, v_ix in zip(cv_ix_all,vv_ix_all):
-                                P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
-                                pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
-                        pred_cv = np.moveaxis(pred_cv, 0, 2)
-                        rmse_cv = nd_rmse(pred_cv, YIP)
-                        # Do fit for imputation    
-                        P.fit(XIP, YIP, n_comps)
-                        pred_ix = np.concatenate((c_ix, pi_ix))
-                        pred_cal = P.predict(np.concatenate((XIP, PXIP)))
-                        pred_cal = np.moveaxis(pred_cal, 0, 2)
-                        # Pick optimal components
-                        opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
-                        opt_comps[opt_comps> iter + tmp_val] = iter + tmp_val
-                        if tmp_val2 is not None:
-                            if iter==0:
-                                if tmp_val2>=0 and tmp_val2<=Max_LV-1:
-                                    opt_comps[opt_comps>tmp_val2] = tmp_val2
-                                opt_comps_old = np.copy(opt_comps)
-                            else:
-                                tmp2 = opt_comps - opt_comps_old
-                                ind_pos = np.where((tmp2 != 1) & (tmp2>0))
-                                ind_neg = np.where((tmp2!=-1) & (tmp2<0))
-                                opt_comps[ind_pos] = opt_comps_old[ind_pos]+1 
-                                opt_comps[ind_neg] = opt_comps_old[ind_neg]-1
-                                opt_comps[opt_comps>=Max_LV] = Max_LV-1
-                                opt_comps[opt_comps<0] = 0
-                                opt_comps_old = np.copy(opt_comps)
-                        if GM_type == 1:
-                            a1,b1 = np.unique(opt_comps, return_counts=True)
-                            LV_glob = a1[np.argmax(b1)]
-                        elif GM_type ==3:
-                            # LV_glob = np.argmin(rmse_cv.mean(axis=1))                        
-                            LV_glob = np.argmin(rmse_cv.sum(axis=1))
-                        else:
-                            LV_glob = int(np.round(np.mean(opt_comps)))
-                        if tmp_val2 is not None:
-                            if iter==0:
-                                if tmp_val2>=0 and tmp_val2<=Max_LV-1:
-                                    opt_comps[opt_comps> tmp_val2] = tmp_val2
-                                LV_glob_old = np.copy(LV_glob)
-                            else:
-                                tmp2 = LV_glob - LV_glob_old
-                                if tmp2 > 1:
-                                    LV_glob = LV_glob_old + 1
-                                elif tmp2<-1:
-                                    LV_glob = LV_glob_old - 1
-                                    
-                                if LV_glob>=Max_LV:
-                                    LV_glob = Max_LV -1
-                                elif LV_glob<0:
-                                    LV_glob = 0
-                        if LV_glob > iter + tmp_val:
-                            LV_glob = iter + tmp_val
-                        pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
-                        for n in range(pred_cal.shape[0]):
-                            for m in range(pred_cal.shape[1]):
-                                if Opt_LV == 'pervar':
-                                    pred[n,m] = pred_cal[n,m,opt_comps[m]]
-                                    if missingmap_yi[pred_ix[n], m]:
-                                        LV_cnt.append(opt_comps[m]+1)
-                                elif Opt_LV == 'allvars':
-                                    pred[n,m] = pred_cal[n,m,LV_glob]
-                                    if missingmap_yi[pred_ix[n], m]:
-                                        LV_cnt.append(LV_glob+1)
-                        # Move imputed sample to calibration set
-                        c_ix = np.append(c_ix, values=pi_ix)
-                        p_ix = p_ix[len(pi_ix):]
-                        if len(p_ix) ==0:
-                            predP1 = np.empty(pred.shape, dtype = np.float64)
-                            predP1[np.where(missingmap_yi)]=pred[np.where(missingmap_yi)].copy()
-                        # Reverse preprocessing
-                        pred *= SIYC
-                        pred += MIYC
-                        pred = np.abs(pred)
-                        if len_old == len(c_ix)-len(pi_ix):
-                            pred_old = pred.copy()
-                        else:
-                            pred_old = np.concatenate((pred_old,pred[-1,:].reshape(1,-1)))
-                        # Replace original missing with predicted 
-                        for n in range(pred.shape[0]):
-                            for m in range(pred.shape[1]):
-                                if missingmap_yi[pred_ix[n], m]:
-                                    if abs(pred[n,m]-pred_old[n,m])/np.max([pred[n,m],pred_old[n,m]])<=Thresh_itr:
-                                        YI[pred_ix[n], m] = pred[n,m]
-                                        MV.append(pred[n,m])
-                                    else:
-                                        YI[pred_ix[n], m] = pred_old[n,m]
-                                        MV.append(pred_old[n,m])
-                                    MV_idx.append([pred_ix[n], m])
-                        if len_old != len(c_ix)-len(pi_ix):
-                            pred_old = pred.copy()
-                        iter+=1
-                        if verbose is not None and verbose is not False:
-                            bar.update(iter)
-            #######################################################################
-            YI_P1 = np.copy(YI)
-            unique_pairs = {}
-            for index, inner_list in enumerate(MV_idx):
-                pair = tuple(inner_list)
-                if pair not in unique_pairs:
-                    unique_pairs[pair] = [index]
-                else:
-                    unique_pairs[pair].append(index)
-            Keys = list(unique_pairs.keys())
-            ## Plotting the updates of the selected MVs to observe their convergence trend 
-            #%
-            idxy = np.empty((2,len(Keys)), dtype=np.int64)
-            idxy[0] = [Keys[ii][0] for ii in range(len(Keys))]
-            idxy[1] = [Keys[ii][1] for ii in range(len(Keys))]
-            idxy = tuple(idxy)    
-            ###### Phase II: Updating MVs until reaching a convergence
-            YI_P2 = np.copy(YI_P1)
-            LV_cnt_new = []
-            pred_old = np.copy(pred)
-            if YT is None:
-                RMSE_old = 1
-                # RMSE_old1 = 1
-            else:
-                RMSE_old = root_mean_squared_error(YI_P1[idxy], YT[idxy])
-                # RMSE_old1 = root_mean_squared_error(YI_P1, YT)
-            RMSE_new = 2*RMSE_old
-            # RMSE_new1 = 2*RMSE_old1
-            if CNT is None:
-                CNT = 101
-            CNT0 = np.copy(CNT)
-            if Thresh is None:
-                Thresh = 1e-6
-            MV_new = np.array(MV[-len(Keys):])
-            # while (np.abs(RMSE_new-RMSE_old)/RMSE_old)>Thresh and CNT!=1: #and np.abs(RMSE_new1-RMSE_old1)>Thresh:
-            while (np.abs(RMSE_new-RMSE_old))>Thresh and CNT!=1: #and np.abs(RMSE_new1-RMSE_old1)>Thresh:
+    # Calculating the index of a sample with the intermediate no. MVs
+    # The intermediate case is according to the samples with the median no. MVs
+    if len(uq_missing_yi)!=2:
+        Intermediate_MV_idx = np.argmin(abs(np.median(uq_missing_yi[1:])-uq_missing_yi[1:]))
+    else:
+        Intermediate_MV_idx = 1
+    #%%
+    # Do imputation
+    n_comps = Max_LV 
+    if YI.shape[0]>=YI.shape[1]:
+        P = PLS(algorithm=1)
+    else:
+        P = PLS(algorithm=2)
+    #%%
+    # Variables for recording the iterative updates of MVs
+    MV = [] 
+    MV_idx = []
+    LV_cnt = []
+    #%% Cross_validation mode
+    if rnd_stat is None:
+        rnd_stat = 42
+    # Nsplits = 30
+    Nsplits_old = np.copy(Nsplits).tolist()
+    #%% Pase I: predicting the samples with missing values and imputing them
+    len_old = len(c_ix)
+    if Thresh_itr is None:
+        Thresh_itr = 0#5e-2
+    if tmp_val is None:
+        tmp_val = Max_LV -1 
+    with progressbar.ProgressBar(max_value= Max_Value) as bar:
+        if App == 'A0xy':
+           Nsplits = np.copy(Nsplits_old).tolist()
+           # Preprocess (autoscale) calibration data
+           MIXC = XI[c_ix,:].mean(axis=0)
+           SIXC = XI[c_ix,:].std(axis=0)
+           XIP = (XI[c_ix, :] - MIXC) / SIXC
+           MIYC = YI[c_ix,:].mean(axis=0)
+           SIYC = YI[c_ix,:].std(axis=0)
+           YIP = (YI[c_ix, :] - MIYC) / SIYC
+           pi_ix = p_ix[0]
+           PXIP = (XI[pi_ix, :] - MIXC) / SIXC
+           if np.ndim(PXIP) == 1: # convert a 1D array into a 2D one with, e.g. converting from MX0 or 0xM into 1xM
+               PXIP = PXIP.reshape(1,-1)
+           No_samples = len(XIP)
+           if Nsplits>No_samples:
+              Nsplits = No_samples
+           if cv_mode == 'KFold':
+               # Do CV fit
+               pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
+               cv = model_selection.KFold(n_splits=Nsplits, random_state=rnd_stat, shuffle=True)
+               for cv_ix, v_ix in cv.split(X=XIP):
+                   P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
+                   pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
+           elif cv_mode=='Venetian':
+               # Do CV fit
+               pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
+               cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, num_splits=Nsplits, 
+                                                              random_state=None, shuffle=None)
+               for cv_ix, v_ix in zip(cv_ix_all,vv_ix_all):
+                   P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
+                   pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
+           pred_cv = np.moveaxis(pred_cv, 0, 2)
+           rmse_cv = nd_rmse(pred_cv, YIP)
+           # Do fit for imputation    
+           P.fit(XIP, YIP, n_comps)
+           pred_ix = np.concatenate((c_ix, pi_ix))
+           pred_cal = P.predict(np.concatenate((XIP, PXIP)))
+           pred_cal = np.moveaxis(pred_cal, 0, 2)
+           # Pick optimal components
+           opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
+           opt_comps[opt_comps> tmp_val] = tmp_val
+           if tmp_val2 is not None:
+               if tmp_val2>=0 and tmp_val2<=Max_LV-1:
+                   opt_comps[opt_comps> tmp_val2] = tmp_val2
+               opt_comps_old = np.copy(opt_comps)
+           if GM_type == 1:
+               a1,b1 = np.unique(opt_comps, return_counts=True)
+               LV_glob = a1[np.argmax(b1)]
+           elif GM_type ==3:
+               # LV_glob = np.argmin(rmse_cv.mean(axis=1))   
+               LV_glob = np.argmin(rmse_cv.sum(axis=1))                        
+           else:
+               LV_glob = int(np.round(np.mean(opt_comps)))
+           if tmp_val2 is not None:
+               if tmp_val2>=0 and tmp_val2<=Max_LV-1 and LV_glob > tmp_val2:
+                   LV_glob = tmp_val2
+               LV_glob_old = np.copy(LV_glob)
+           if LV_glob > tmp_val:
+               LV_glob = tmp_val
+           pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
+           if init_len_cix<3:
+               missingmap_yi = missingmap_yi_copy.copy()
+               missing_yi = missingmap_yi.sum(axis=1)
+               uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(
+                   missing_yi, axis=0, return_counts=True, return_index=True)
+           for n in range(pred_cal.shape[0]):
+               for m in range(pred_cal.shape[1]):
+                   if Opt_LV == 'pervar':
+                       pred[n,m] = pred_cal[n,m,opt_comps[m]]
+                       if missingmap_yi[pred_ix[n], m]:
+                           LV_cnt.append(opt_comps[m]+1)
+                   elif Opt_LV == 'allvars':
+                       pred[n,m] = pred_cal[n,m,LV_glob]
+                       if missingmap_yi[pred_ix[n], m]:
+                           LV_cnt.append(LV_glob+1)
+           # Move imputed sample to calibration set
+           c_ix = np.append(c_ix, values=pi_ix)
+           p_ix = p_ix[len(pi_ix):]
+           if len(p_ix) ==0:
+               predP1 = np.empty(pred.shape, dtype = np.float64)
+               predP1[np.where(missingmap_yi)]=pred[np.where(missingmap_yi)].copy()
+           # Reverse preprocessing
+           pred *= SIYC
+           pred += MIYC
+           # Absolute of the cases in which negative values appear in the prediction
+           pred = np.abs(pred)
+           if len_old == len(c_ix)-len(pi_ix):
+               pred_old = pred.copy()
+           else:
+               pred_old = np.concatenate((pred_old,pred[pi_ix,:]))
+           # Replace original missing with predicted 
+           for n in range(pred.shape[0]):
+               for m in range(pred.shape[1]):
+                   if missingmap_yi[pred_ix[n], m]:
+                       if abs(pred[n,m]-pred_old[n,m])/np.max([pred[n,m],pred_old[n,m]])<=Thresh_itr:
+                           YI[pred_ix[n], m] = pred[n,m]
+                           MV.append(pred[n,m])
+                       else:
+                           YI[pred_ix[n], m] = pred_old[n,m]
+                           MV.append(pred_old[n,m])
+                       MV_idx.append([pred_ix[n], m])
+           if len_old != len(c_ix)-len(pi_ix):
+               pred_old = pred.copy()
+           if verbose is not None and verbose is not False:
+               bar.update(1)
+        elif App == 'A2xy' or App == 'A3xy':
+            for ii in range(len(KEYS1)):
                 Nsplits = np.copy(Nsplits_old)
                 Nsplits = Nsplits.tolist()
                 # Preprocess (autoscale) calibration data
-                RMSE_old = RMSE_new
-                MIXC = XI.mean(axis=0)
-                SIXC = XI.std(axis=0)
-                XIP = (XI - MIXC) / SIXC
-        
-                MIYC = YI_P2.mean(axis=0)
-                SIYC = YI_P2.std(axis=0)
-                YIP = (YI_P2 - MIYC) / SIYC
-                
+                MIXC = XI[c_ix,:].mean(axis=0)
+                SIXC = XI[c_ix,:].std(axis=0)
+                XIP = (XI[c_ix, :] - MIXC) / SIXC
+                MIYC = YI[c_ix,:].mean(axis=0)
+                SIYC = YI[c_ix,:].std(axis=0)
+                YIP = (YI[c_ix, :] - MIYC) / SIYC
+                # Preprocess (autoscale) imputation row(s)
+                # This is one-strat-at-a-time:
+                p_ix = St_idx[KEYS1[ii]]
+                pi_ix = np.append(c_ix, values = p_ix)
+                PXIP = (XI[p_ix, :] - MIXC) / SIXC
+                if np.ndim(PXIP) == 1:
+                    PXIP = PXIP.reshape(1,-1)
                 No_samples = len(XIP)
                 if Nsplits>No_samples:
                    Nsplits = No_samples
@@ -1429,117 +719,392 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                     # Do CV fit
                     pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
                     cv = model_selection.KFold(n_splits=Nsplits, random_state=rnd_stat, shuffle=True)
-                    for c_ix, v_ix in cv.split(X=XIP):
-                        MXC = XI[c_ix,:].mean(axis=0)
-                        SXC = XI[c_ix,:].std(axis=0)
-                        MYC = YI_P2[c_ix,:].mean(axis=0)
-                        SYC = YI_P2[c_ix,:].std(axis=0)
-                        XIC = (XI[c_ix,:] - MXC)/SXC
-                        YIC = (YI_P2[c_ix,:] - MYC)/SYC
-                        # P.fit(XIP[c_ix,:], YIP[c_ix, :], n_comps)
-                        P.fit(XIC,YIC, n_comps)
-                        # pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
-                        pred_cv[:,v_ix,:] = P.predict(XI[v_ix,:]-MXC)*SYC+MYC
+                    for cv_ix, v_ix in cv.split(X=XIP):
+                        P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
+                        pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
+                elif cv_mode=='Venetian':
+                    # Do CV fit
+                    pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
+                    cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, 
+                                                                   num_splits=Nsplits, 
+                                                                   random_state=None, 
+                                                                   shuffle=None)
+                    for cv_ix, v_ix in zip(cv_ix_all,vv_ix_all):
+                        P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
+                        pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
+                pred_cv = np.moveaxis(pred_cv, 0, 2)
+                rmse_cv = nd_rmse(pred_cv, YIP)
+                # Do fit for imputation    
+                P.fit(XIP, YIP, n_comps)
+                pred_ix = pi_ix
+                pred_cal = P.predict(np.concatenate((XIP, PXIP)))
+                pred_cal = np.moveaxis(pred_cal, 0, 2)
+                # Pick optimal components
+                opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
+                opt_comps[opt_comps> ii + tmp_val] = ii + tmp_val
+                if tmp_val2 is not None:
+                    if ii==0:
+                        if tmp_val2>=0 and tmp_val2<=Max_LV-1:
+                            opt_comps[opt_comps>tmp_val2] = tmp_val2
+                        opt_comps_old = np.copy(opt_comps)
+                    else:
+                        tmp2 = opt_comps - opt_comps_old
+                        ind_pos = np.where((tmp2 != 1) & (tmp2>0))
+                        ind_neg = np.where((tmp2!=-1) & (tmp2<0))
+                        opt_comps[ind_pos] = opt_comps_old[ind_pos]+1 
+                        opt_comps[ind_neg] = opt_comps_old[ind_neg]-1
+                        # opt_comps = np.copy(opt_comps_old)+1
+                        opt_comps[opt_comps>=Max_LV] = Max_LV-1
+                        opt_comps[opt_comps<0] = 0
+                        opt_comps_old = np.copy(opt_comps)
+                if GM_type == 1:
+                    a1,b1 = np.unique(opt_comps, return_counts=True)
+                    LV_glob = a1[np.argmax(b1)]
+                elif GM_type ==3:
+                    # LV_glob = np.argmin(rmse_cv.mean(axis=1))                        
+                    LV_glob = np.argmin(rmse_cv.sum(axis=1))                        
+                else:
+                    LV_glob = int(np.round(np.mean(opt_comps)))
+                if tmp_val2 is not None:
+                    if ii==0:
+                        if tmp_val2>=0 and tmp_val2<=Max_LV-1:
+                            opt_comps[opt_comps>tmp_val2] = tmp_val2
+                        LV_glob_old = np.copy(LV_glob)
+                    else:
+                        tmp2 = LV_glob - LV_glob_old
+                        if tmp2 > 1:
+                            LV_glob = LV_glob_old + 1
+                        elif tmp2<-1:
+                            LV_glob = LV_glob_old - 1     
+                        if LV_glob>=Max_LV:
+                            LV_glob = Max_LV -1
+                        elif LV_glob<0:
+                            LV_glob = 0
+                if LV_glob > ii + tmp_val:
+                    LV_glob = ii + tmp_val
+                pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
+                if init_len_cix<3:
+                    missingmap_yi = missingmap_yi_copy.copy()
+                    missing_yi = missingmap_yi.sum(axis=1)
+                    uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(
+                        missing_yi, axis=0, return_counts=True, return_index=True)
+                for n in range(pred_cal.shape[0]):
+                    for m in range(pred_cal.shape[1]):
+                        if Opt_LV == 'pervar':
+                            pred[n,m] = pred_cal[n,m,opt_comps[m]]
+                            if missingmap_yi[pred_ix[n], m]:
+                                LV_cnt.append(opt_comps[m]+1)
+                        elif Opt_LV == 'allvars':
+                            pred[n,m] = pred_cal[n,m,LV_glob]
+                            if missingmap_yi[pred_ix[n], m]:
+                                LV_cnt.append(LV_glob+1)
+                        
+                # Move imputed sample to calibration set
+                # c_ix = np.append(c_ix, values=pi_ix)
+                c_ix = pi_ix
+                if ii == len(KEYS1)-1:
+                    # predP = pred.copy()
+                    predP1 = np.empty(pred.shape, dtype = np.float64)
+                    predP1[np.where(missingmap_yi)]=pred[np.where(missingmap_yi)].copy()
+                # Reverse preprocessing
+                pred *= SIYC
+                pred += MIYC
+                # pred *= SIYP
+                # pred += MIYP
+                pred = np.abs(pred)
+                if len_old == len(c_ix)-len(p_ix):
+                    pred_old = pred.copy()
+                else:
+                    pred_old = np.concatenate((pred_old,pred[-len(p_ix):,:]))
+                # Replace original missing with predicted 
+                for n in range(pred.shape[0]):
+                    for m in range(pred.shape[1]):
+                        if missingmap_yi[pred_ix[n], m]:
+                            if abs(pred[n,m]-pred_old[n,m])/np.max([pred[n,m],pred_old[n,m]])<=Thresh_itr:
+                                YI[pred_ix[n], m] = pred[n,m]
+                                MV.append(pred[n,m])
+                            else:
+                                YI[pred_ix[n], m] = pred_old[n,m]
+                                MV.append(pred_old[n,m])
+                            MV_idx.append([pred_ix[n], m])
+                if len_old != len(c_ix)-len(pi_ix):
+                    pred_old = pred.copy()
+                if verbose is not None:#verbose!=None:
+                    bar.update(ii)
+        elif App =='A1xy':
+            while len(p_ix) > 0:
+                Nsplits = np.copy(Nsplits_old)
+                Nsplits = Nsplits.tolist()
+                # Preprocess (autoscale) calibration data
+                MIXC = XI[c_ix,:].mean(axis=0)
+                SIXC = XI[c_ix,:].std(axis=0)
+                XIP = (XI[c_ix, :] - MIXC) / SIXC
+                MIYC = YI[c_ix,:].mean(axis=0)
+                SIYC = YI[c_ix,:].std(axis=0)
+                YIP = (YI[c_ix, :] - MIYC) / SIYC
+                # Preprocess (autoscale) imputation row(s)
+                # This is one-row-at-a-time :
+                pi_ix = [p_ix[0]]
+                PXIP = (XI[pi_ix, :] - MIXC) / SIXC
+                if np.ndim(PXIP) == 1: # convert a 1D array into a 2D one with, e.g. converting from MX0 or 0xM into 1xM
+                    PXIP = PXIP.reshape(1,-1)
+                No_samples = len(XIP)
+                if Nsplits>No_samples:
+                   Nsplits = No_samples
+                if cv_mode == 'KFold':
+                    # Do CV fit
+                    pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
+                    cv = model_selection.KFold(n_splits=Nsplits, random_state=rnd_stat, shuffle=True)
+                    for cv_ix, v_ix in cv.split(X=XIP):
+                        
+                        P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
+                        pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
                 elif cv_mode=='Venetian':
                     # Do CV fit
                     pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
                     cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, num_splits=Nsplits, 
                                                                    random_state=None, shuffle=None)
-                    for c_ix, v_ix in zip(cv_ix_all,vv_ix_all):
-                        MXC = XI[c_ix,:].mean(axis=0)
-                        SXC = XI[c_ix,:].std(axis=0)
-                        MYC = YI_P2[c_ix,:].mean(axis=0)
-                        SYC = YI_P2[c_ix,:].std(axis=0)
-                        XIC = (XI[c_ix,:] - MXC)/SXC
-                        YIC = (YI_P2[c_ix,:] - MYC)/SYC
-                        # P.fit(XIP[c_ix,:], YIP[c_ix, :], n_comps)
-                        P.fit(XIC,YIC, n_comps)
-                        # pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
-                        pred_cv[:,v_ix,:] = P.predict(XI[v_ix,:]-MXC)*SYC+MYC
+                    for cv_ix, v_ix in zip(cv_ix_all,vv_ix_all):
+                        P.fit(XIP[cv_ix,:], YIP[cv_ix, :], n_comps)
+                        pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
                 pred_cv = np.moveaxis(pred_cv, 0, 2)
-                rmse_cv = nd_rmse(pred_cv, YI_P2)
-                # Do fit for imputation   
+                rmse_cv = nd_rmse(pred_cv, YIP)
+                # Do fit for imputation    
                 P.fit(XIP, YIP, n_comps)
-                pred_cal = P.predict(XIP)
+                pred_ix = np.concatenate((c_ix, pi_ix))
+                pred_cal = P.predict(np.concatenate((XIP, PXIP)))
                 pred_cal = np.moveaxis(pred_cal, 0, 2)
                 # Pick optimal components
                 opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
+                opt_comps[opt_comps> iter + tmp_val] = iter + tmp_val
                 if tmp_val2 is not None:
-                    opt_comps = np.copy(opt_comps_old)+1
-                    opt_comps[opt_comps>=Max_LV] = Max_LV -1
-                    opt_comps_old = np.copy(opt_comps)
+                    if iter==0:
+                        if tmp_val2>=0 and tmp_val2<=Max_LV-1:
+                            opt_comps[opt_comps>tmp_val2] = tmp_val2
+                        opt_comps_old = np.copy(opt_comps)
+                    else:
+                        tmp2 = opt_comps - opt_comps_old
+                        ind_pos = np.where((tmp2 != 1) & (tmp2>0))
+                        ind_neg = np.where((tmp2!=-1) & (tmp2<0))
+                        opt_comps[ind_pos] = opt_comps_old[ind_pos]+1 
+                        opt_comps[ind_neg] = opt_comps_old[ind_neg]-1
+                        opt_comps[opt_comps>=Max_LV] = Max_LV-1
+                        opt_comps[opt_comps<0] = 0
+                        opt_comps_old = np.copy(opt_comps)
                 if GM_type == 1:
                     a1,b1 = np.unique(opt_comps, return_counts=True)
                     LV_glob = a1[np.argmax(b1)]
                 elif GM_type ==3:
-                    LV_glob = np.argmin(rmse_cv.mean(axis=1))
+                    # LV_glob = np.argmin(rmse_cv.mean(axis=1))                        
+                    LV_glob = np.argmin(rmse_cv.sum(axis=1))
                 else:
                     LV_glob = int(np.round(np.mean(opt_comps)))
                 if tmp_val2 is not None:
-                   LV_glob = LV_glob_old + 1
-                   if LV_glob>=Max_LV:
-                      LV_glob = Max_LV-1
+                    if iter==0:
+                        if tmp_val2>=0 and tmp_val2<=Max_LV-1:
+                            opt_comps[opt_comps> tmp_val2] = tmp_val2
+                        LV_glob_old = np.copy(LV_glob)
+                    else:
+                        tmp2 = LV_glob - LV_glob_old
+                        if tmp2 > 1:
+                            LV_glob = LV_glob_old + 1
+                        elif tmp2<-1:
+                            LV_glob = LV_glob_old - 1
+                            
+                        if LV_glob>=Max_LV:
+                            LV_glob = Max_LV -1
+                        elif LV_glob<0:
+                            LV_glob = 0
+                if LV_glob > iter + tmp_val:
+                    LV_glob = iter + tmp_val
                 pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
+                if init_len_cix<3:
+                    missingmap_yi = missingmap_yi_copy.copy()
+                    missing_yi = missingmap_yi.sum(axis=1)
+                    uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(
+                        missing_yi, axis=0, return_counts=True, return_index=True)
                 for n in range(pred_cal.shape[0]):
                     for m in range(pred_cal.shape[1]):
                         if Opt_LV == 'pervar':
                             pred[n,m] = pred_cal[n,m,opt_comps[m]]
-                            if missingmap_yi[n, pred_ix[m]]:
-                                LV_cnt_new.append(opt_comps[m]+1)
+                            if missingmap_yi[pred_ix[n], m]:
+                                LV_cnt.append(opt_comps[m]+1)
                         elif Opt_LV == 'allvars':
                             pred[n,m] = pred_cal[n,m,LV_glob]
-                            if missingmap_yi[n,pred_ix[m]]:
-                                LV_cnt_new.append(LV_glob+1)
-                # predP = pred.copy()
-                if YT is None:
-                    predP2 = np.copy(YIP)
-                else:
-                    YTP = (YT - YT.mean(axis=0)) / YT.std(axis=0)
-                    predP2 = np.copy(YTP)
-                predP2[idxy]=pred[idxy]
+                            if missingmap_yi[pred_ix[n], m]:
+                                LV_cnt.append(LV_glob+1)
+                # Move imputed sample to calibration set
+                c_ix = np.append(c_ix, values=pi_ix)
+                p_ix = p_ix[len(pi_ix):]
+                if len(p_ix) ==0:
+                    predP1 = np.empty(pred.shape, dtype = np.float64)
+                    predP1[np.where(missingmap_yi)]=pred[np.where(missingmap_yi)].copy()
                 # Reverse preprocessing
                 pred *= SIYC
                 pred += MIYC
                 pred = np.abs(pred)
-                # Replace original missing with predicted 
-                YI_Ptmp = np.copy(YI_P2)
-                YI_P2 = np.copy(YI1)
-                YI_P2[idxy] = pred[idxy]
-                MV_new = np.concatenate((MV_new, YI_P2[idxy]),axis=0)
-                CNT-=1
-                if YT is None:
-                    RMSE_new = root_mean_squared_error(YI_P2[idxy], YI_Ptmp[idxy])
-                    #RMSE_new1 = root_mean_squared_error(YI_P2, YI_Ptmp)
+                if len_old == len(c_ix)-len(pi_ix):
+                    pred_old = pred.copy()
                 else:
-                    RMSE_new = root_mean_squared_error(YI_P2[idxy], YT[idxy])
-                    #RMSE_new1 = root_mean_squared_error(YI_P2, YT)
-                if verbose is not None and verbose is not False and verbose is not False:
-                    # print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {(np.abs(RMSE_new-RMSE_old)/RMSE_old).round(7)}')
-                    print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {(np.abs(RMSE_new-RMSE_old)).round(7)}')    
-        else:
-            YYT = np.concatenate((XI,YI),axis=1)
-            from fancyimpute import IterativeImputer as fancy_Iterimputer
-            YI_P2 = fancy_Iterimputer().fit_transform(YYT)[:,-YI.shape[1]:]
-            uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(np.isnan(YI).sum(axis=1), 
-                                                                             return_index=True, 
-                                                                             return_counts= True)
-            YI_P1 = np.copy(YI_P2)
-            idxy = np.where(np.isnan(YI))
-            Intermediate_MV_idx = uq_missing_yi_idx[int(np.median(np.arange(0,len(uq_missing_yi_idx))))]
-            Lowest_MV_idx = uq_missing_yi_idx[1]
-            predP1, predP2, MV, MV_new, MV_idx, LV_cnt, Max_Value = [],[],[],[],[],[],[]
+                    pred_old = np.concatenate((pred_old,pred[-1,:].reshape(1,-1)))
+                # Replace original missing with predicted 
+                for n in range(pred.shape[0]):
+                    for m in range(pred.shape[1]):
+                        if missingmap_yi[pred_ix[n], m]:
+                            if abs(pred[n,m]-pred_old[n,m])/np.max([pred[n,m],pred_old[n,m]])<=Thresh_itr:
+                                YI[pred_ix[n], m] = pred[n,m]
+                                MV.append(pred[n,m])
+                            else:
+                                YI[pred_ix[n], m] = pred_old[n,m]
+                                MV.append(pred_old[n,m])
+                            MV_idx.append([pred_ix[n], m])
+                if len_old != len(c_ix)-len(pi_ix):
+                    pred_old = pred.copy()
+                iter+=1
+                if verbose is not None:
+                    bar.update(iter)
     #%%
-    elif uq_missing_yi_cnts[0]==0 or uq_missing_yi[0]!=0:
-        YYT = np.concatenate((XI,YI),axis=1)
-        from fancyimpute import IterativeImputer as fancy_Iterimputer
-        YI_P2 = fancy_Iterimputer().fit_transform(YYT)[:,-YI.shape[1]:]
-        uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(np.isnan(YI).sum(axis=1), 
-                                                                         return_index=True, 
-                                                                         return_counts= True)
-        YI_P1 = np.copy(YI_P2)
-        idxy = np.where(np.isnan(YI))
-        Intermediate_MV_idx = uq_missing_yi_idx[int(np.median(np.arange(0,len(uq_missing_yi_idx))))]
-        Lowest_MV_idx = uq_missing_yi_idx[1]
-        predP1, predP2, MV, MV_new, MV_idx, LV_cnt, Max_Value = [],[],[],[],[],[],[]
-    ########
+    YI_P1 = np.copy(YI)
+    unique_pairs = {}
+    for index, inner_list in enumerate(MV_idx):
+        pair = tuple(inner_list)
+        if pair not in unique_pairs:
+            unique_pairs[pair] = [index]
+        else:
+            unique_pairs[pair].append(index)
+    Keys = list(unique_pairs.keys())
+    ## Plotting the updates of the selected MVs to observe their convergence trend 
+    #%%
+    # idxy = np.empty((2,len(Keys)), dtype=np.int64)
+    # idxy[0] = [Keys[ii][0] for ii in range(len(Keys))]
+    # idxy[1] = [Keys[ii][1] for ii in range(len(Keys))]
+    # idxy = tuple(idxy)    
+    idxy = np.where(np.isnan(YI1))
+    #%% Phase II: Updating MVs until reaching a convergence
+    YI_P2 = np.copy(YI_P1)
+    LV_cnt_new = []
+    pred_old = np.copy(pred)
+    if YT is None:
+        RMSE_old = 1
+        # RMSE_old1 = 1
+    else:
+        RMSE_old = root_mean_squared_error(YI_P1[idxy], YT[idxy])
+        # RMSE_old1 = root_mean_squared_error(YI_P1, YT)
+    RMSE_new = 2*RMSE_old
+    # RMSE_new1 = 2*RMSE_old1
+    if CNT is None:
+        CNT = 101
+    CNT0 = np.copy(CNT)
+    if Thresh is None:
+        Thresh = 1e-6
+    MV_new = np.array(MV[-len(Keys):])
+    # while (np.abs(RMSE_new-RMSE_old)/RMSE_old)>Thresh and CNT!=1: #and np.abs(RMSE_new1-RMSE_old1)>Thresh:
+    while (np.abs(RMSE_new-RMSE_old))>Thresh and CNT!=1: #and np.abs(RMSE_new1-RMSE_old1)>Thresh:
+        Nsplits = np.copy(Nsplits_old)
+        Nsplits = Nsplits.tolist()
+        # Preprocess (autoscale) calibration data
+        RMSE_old = RMSE_new
+        MIXC = XI.mean(axis=0)
+        SIXC = XI.std(axis=0)
+        XIP = (XI - MIXC) / SIXC
+
+        MIYC = YI_P2.mean(axis=0)
+        SIYC = YI_P2.std(axis=0)
+        YIP = (YI_P2 - MIYC) / SIYC
+        
+        No_samples = len(XIP)
+        if Nsplits>No_samples:
+           Nsplits = No_samples
+        if cv_mode == 'KFold':
+            # Do CV fit
+            pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
+            cv = model_selection.KFold(n_splits=Nsplits, random_state=rnd_stat, shuffle=True)
+            for c_ix, v_ix in cv.split(X=XIP):
+                MXC = XI[c_ix,:].mean(axis=0)
+                SXC = XI[c_ix,:].std(axis=0)
+                MYC = YI_P2[c_ix,:].mean(axis=0)
+                SYC = YI_P2[c_ix,:].std(axis=0)
+                XIC = (XI[c_ix,:] - MXC)/SXC
+                YIC = (YI_P2[c_ix,:] - MYC)/SYC
+                # P.fit(XIP[c_ix,:], YIP[c_ix, :], n_comps)
+                P.fit(XIC,YIC, n_comps)
+                # pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
+                pred_cv[:,v_ix,:] = P.predict(XI[v_ix,:]-MXC)*SYC+MYC
+        elif cv_mode=='Venetian':
+            # Do CV fit
+            pred_cv = np.empty((n_comps, YIP.shape[0], YIP.shape[1]), dtype=np.float64)
+            cv_ix_all, vv_ix_all = venetian_blinds_indices(XIP, num_splits=Nsplits, 
+                                                           random_state=None, shuffle=None)
+            for c_ix, v_ix in zip(cv_ix_all,vv_ix_all):
+                MXC = XI[c_ix,:].mean(axis=0)
+                SXC = XI[c_ix,:].std(axis=0)
+                MYC = YI_P2[c_ix,:].mean(axis=0)
+                SYC = YI_P2[c_ix,:].std(axis=0)
+                XIC = (XI[c_ix,:] - MXC)/SXC
+                YIC = (YI_P2[c_ix,:] - MYC)/SYC
+                # P.fit(XIP[c_ix,:], YIP[c_ix, :], n_comps)
+                P.fit(XIC,YIC, n_comps)
+                # pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
+                pred_cv[:,v_ix,:] = P.predict(XI[v_ix,:]-MXC)*SYC+MYC
+        pred_cv = np.moveaxis(pred_cv, 0, 2)
+        rmse_cv = nd_rmse(pred_cv, YI_P2)
+        # Do fit for imputation   
+        P.fit(XIP, YIP, n_comps)
+        pred_cal = P.predict(XIP)
+        pred_cal = np.moveaxis(pred_cal, 0, 2)
+        # Pick optimal components
+        opt_comps = find_comps(rmse_cv, just_do_min=Just_do_min)
+        if tmp_val2 is not None:
+            opt_comps = np.copy(opt_comps_old)+1
+            opt_comps[opt_comps>=Max_LV] = Max_LV -1
+            opt_comps_old = np.copy(opt_comps)
+        if GM_type == 1:
+            a1,b1 = np.unique(opt_comps, return_counts=True)
+            LV_glob = a1[np.argmax(b1)]
+        elif GM_type ==3:
+            LV_glob = np.argmin(rmse_cv.mean(axis=1))
+        else:
+            LV_glob = int(np.round(np.mean(opt_comps)))
+        if tmp_val2 is not None:
+           LV_glob = LV_glob_old + 1
+           if LV_glob>=Max_LV:
+              LV_glob = Max_LV-1
+        pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
+        for n in range(pred_cal.shape[0]):
+            for m in range(pred_cal.shape[1]):
+                if Opt_LV == 'pervar':
+                    pred[n,m] = pred_cal[n,m,opt_comps[m]]
+                    if missingmap_yi[pred_ix[n], m]:
+                        LV_cnt_new.append(opt_comps[m]+1)
+                elif Opt_LV == 'allvars':
+                    pred[n,m] = pred_cal[n,m,LV_glob]
+                    if missingmap_yi[pred_ix[n], m]:
+                        LV_cnt_new.append(LV_glob+1)
+        # predP = pred.copy()
+        if YT is None:
+            predP2 = np.copy(YIP)
+        else:
+            YTP = (YT - YT.mean(axis=0)) / YT.std(axis=0)
+            predP2 = np.copy(YTP)
+        predP2[idxy]=pred[idxy]
+        # Reverse preprocessing
+        pred *= SIYC
+        pred += MIYC
+        pred = np.abs(pred)
+        # Replace original missing with predicted 
+        YI_Ptmp = np.copy(YI_P2)
+        YI_P2 = np.copy(YI1)
+        YI_P2[idxy] = pred[idxy]
+        MV_new = np.concatenate((MV_new, YI_P2[idxy]),axis=0)
+        CNT-=1
+        if YT is None:
+            RMSE_new = root_mean_squared_error(YI_P2[idxy], YI_Ptmp[idxy])
+            #RMSE_new1 = root_mean_squared_error(YI_P2, YI_Ptmp)
+        else:
+            RMSE_new = root_mean_squared_error(YI_P2[idxy], YT[idxy])
+            #RMSE_new1 = root_mean_squared_error(YI_P2, YT)
+        if verbose is not None and verbose is not False:
+            # print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {(np.abs(RMSE_new-RMSE_old)/RMSE_old).round(7)}')
+            print(f'Differential RMSE for iter. #{CNT0-CNT} equals to= {(np.abs(RMSE_new-RMSE_old)).round(7)}')
+    #%%
     return YI_P1, YI_P2, predP1, predP2, MV, MV_new, MV_idx, LV_cnt, idxy, Intermediate_MV_idx, Lowest_MV_idx, Max_Value
