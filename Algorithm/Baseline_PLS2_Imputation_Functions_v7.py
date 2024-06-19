@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Jun. 15, 2024
+Created on Fri Jun. 19, 2024
 @author: Ashkan
 
 Comprised a main function for PLS2-based imputation and several operational functions for a variety of applications
@@ -168,7 +168,7 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
             if Log_plt_norm!=None:
                 if Log_plt_norm ==1:
                     Marker_1 = MarkerLOT[np.random.randint(1,len(MarkerLOT))]
-                    plt.semilogy(xx,MV_t[ii,:]*100/YT[n_idx,MVs_idx[ii]], Marker_1, markersize=5, 
+                    plt.semilogy(xx,MV_t[ii,:]*100/YT[n_idx,MVs_idx[ii]], Marker_1, markersize=7, 
                                  color=col_map,linestyle='--',
                                label=f'Pred. Results for MV#{ii+1} in sample #{n_idx+1}')
                     if LV_param!=None:
@@ -182,7 +182,7 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
                             plt.text(x, y, label, fontsize=10)
                 elif Log_plt_norm==2:
                     Marker_1 = MarkerLOT[np.random.randint(1,len(MarkerLOT))]
-                    plt.loglog(xx,MV_t[ii,:]*100/YT[n_idx,MVs_idx[ii]],Marker_1, markersize=5,
+                    plt.loglog(xx,MV_t[ii,:]*100/YT[n_idx,MVs_idx[ii]],Marker_1, markersize=7,
                                color=col_map,linestyle='--',
                                label=f'Pred. Results for MV#{ii+1} in sample #{n_idx+1}')
                     if LV_param!=None:
@@ -196,7 +196,7 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
                             plt.text(x, y, label, fontsize=10)
             else:
                 Marker_1 = MarkerLOT[np.random.randint(1,len(MarkerLOT))]
-                plt.plot(xx,MV_t[ii,:],Marker_1, markersize=5,
+                plt.plot(xx,MV_t[ii,:],Marker_1, markersize=7,
                          color=col_map,linestyle='--',
                           label=f'Pred. Results for MV#{ii+1} in sample #{n_idx+1}')
                 plt.plot(xx,np.repeat(YT[n_idx,MVs_idx[ii]],len(xx)),color=col_map,
@@ -228,7 +228,7 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
                 if Log_plt_norm ==1:
                     Marker_1 = MarkerLOT[np.random.randint(1,len(MarkerLOT))]
                     plt.semilogy(xx,MV_t[ii,:]*100/YT[n_idx,MVs_idx[ii]], Marker_1,
-                                 markersize=5,
+                                 markersize=7,
                                  color=col_map,linestyle='--')
                     if LV_param!=None:
                         LV_cnt = LV_param[0]
@@ -244,7 +244,7 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
                     plt.xticks(np.arange(1,lent1+lent+1,stp_xticks))
                 elif Log_plt_norm==2:
                     Marker_1 = MarkerLOT[np.random.randint(1,len(MarkerLOT))]
-                    plt.loglog(xx,MV_t[ii,:]*100/YT[n_idx,MVs_idx[ii]], Marker_1, markersize = 5,
+                    plt.loglog(xx,MV_t[ii,:]*100/YT[n_idx,MVs_idx[ii]], Marker_1, markersize = 7,
                                color=col_map,linestyle='--')
                     if LV_param!=None:
                         LV_cnt = LV_param[0]
@@ -260,7 +260,7 @@ def Conv_trend_plot(MV, no_MV, n_idx, MV_idx_1, idxy, YT, MV_new =None,
                     plt.xticks(np.arange(1,lent1+lent+1,stp_xticks))
             else:
                 Marker_1 = MarkerLOT[np.random.randint(1,len(MarkerLOT))]
-                plt.plot(xx,MV_t[ii,:], Marker_1,markersize=5, 
+                plt.plot(xx,MV_t[ii,:], Marker_1,markersize=7, 
                          color=col_map,linestyle='--',
                          label=f'Pred. Results for MV#{ii+1} in sample #{n_idx+1}')
                 plt.plot(xx,np.repeat(YT[n_idx,MVs_idx[ii]],len(xx)), 
@@ -695,6 +695,11 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
            if verbose is not None and verbose is not False:
                bar.update(1)
         elif App == 'A2xy' or App == 'A3xy':
+            if init_len_cix<3:
+                missingmap_yi = missingmap_yi_copy.copy()
+                missing_yi = missingmap_yi.sum(axis=1)
+                uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(
+                    missing_yi, axis=0, return_counts=True, return_index=True)
             for ii in range(len(KEYS1)):
                 Nsplits = np.copy(Nsplits_old)
                 Nsplits = Nsplits.tolist()
@@ -783,11 +788,6 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 if LV_glob > ii + tmp_val:
                     LV_glob = ii + tmp_val
                 pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
-                if init_len_cix<3:
-                    missingmap_yi = missingmap_yi_copy.copy()
-                    missing_yi = missingmap_yi.sum(axis=1)
-                    uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(
-                        missing_yi, axis=0, return_counts=True, return_index=True)
                 for n in range(pred_cal.shape[0]):
                     for m in range(pred_cal.shape[1]):
                         if Opt_LV == 'pervar':
@@ -798,7 +798,6 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                             pred[n,m] = pred_cal[n,m,LV_glob]
                             if missingmap_yi[pred_ix[n], m]:
                                 LV_cnt.append(LV_glob+1)
-                        
                 # Move imputed sample to calibration set
                 # c_ix = np.append(c_ix, values=pi_ix)
                 c_ix = pi_ix
@@ -829,9 +828,14 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                             MV_idx.append([pred_ix[n], m])
                 if len_old != len(c_ix)-len(pi_ix):
                     pred_old = pred.copy()
-                if verbose is not None:#verbose!=None:
+                if verbose is not None and verbose is not False:#verbose!=None:
                     bar.update(ii)
         elif App =='A1xy':
+            if init_len_cix<3:
+                missingmap_yi = missingmap_yi_copy.copy()
+                missing_yi = missingmap_yi.sum(axis=1)
+                uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(
+                    missing_yi, axis=0, return_counts=True, return_index=True)
             while len(p_ix) > 0:
                 Nsplits = np.copy(Nsplits_old)
                 Nsplits = Nsplits.tolist()
@@ -918,11 +922,6 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 if LV_glob > iter + tmp_val:
                     LV_glob = iter + tmp_val
                 pred = np.empty(pred_cal.shape[0:2], dtype=np.float64)
-                if init_len_cix<3:
-                    missingmap_yi = missingmap_yi_copy.copy()
-                    missing_yi = missingmap_yi.sum(axis=1)
-                    uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(
-                        missing_yi, axis=0, return_counts=True, return_index=True)
                 for n in range(pred_cal.shape[0]):
                     for m in range(pred_cal.shape[1]):
                         if Opt_LV == 'pervar':
@@ -975,11 +974,10 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
     Keys = list(unique_pairs.keys())
     ## Plotting the updates of the selected MVs to observe their convergence trend 
     #%%
-    # idxy = np.empty((2,len(Keys)), dtype=np.int64)
-    # idxy[0] = [Keys[ii][0] for ii in range(len(Keys))]
-    # idxy[1] = [Keys[ii][1] for ii in range(len(Keys))]
-    # idxy = tuple(idxy)    
-    idxy = np.where(np.isnan(YI1))
+    idxy = np.empty((2,len(Keys)), dtype=np.int64)
+    idxy[0] = [Keys[ii][0] for ii in range(len(Keys))]
+    idxy[1] = [Keys[ii][1] for ii in range(len(Keys))]
+    idxy = tuple(idxy)    
     #%% Phase II: Updating MVs until reaching a convergence
     YI_P2 = np.copy(YI_P1)
     LV_cnt_new = []
