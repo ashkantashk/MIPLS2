@@ -29,7 +29,7 @@ The codes are available at the current repository's main and the Revised_Version
 * Note 2: The hyperparameters are adjusted and tuned based on the implementation results of the evaluation datasets.
   
 # Scripts
-1- Baseline_PLS2_Imputation_Functions_v7.py
+1- MIPLS2_v7.py
 <p align="justify">
 This Python script contains the code lines for implementing the baseline PLS2 model and the trials for figuring out the impact of missing values on the covariance relationship between the prediction results.
 
