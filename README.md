@@ -41,7 +41,7 @@ This Python script contains the code lines for implementing the baseline PLS2 mo
 The proposed PLS2-based imputation method has an implementation based on the visualized flow block diagram in Figure 2:
 </p>
 
-![image](https://github.com/ashkantashk/MIPLS2/assets/53473481/b99e111b-6477-4b70-a01d-01ca371c69d4)
+![image](https://github.com/ashkantashk/MIPLS2/assets/53473481/fc0cd14f-382e-492e-9c8c-43dd2f270f26)
 
 <p align="justify">
 Figure 2. Functional flow block diagram for the two phases of the proposed PLS2-based imputation algorithm
