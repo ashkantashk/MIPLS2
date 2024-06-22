@@ -26,12 +26,12 @@ The codes are available at the current repository's main and the Revised_Version
 > 1. older version of the code with fewer list of input arguments 
 
 * Note 1: The code contains essential functions for its complete and flawless running.
-* Note 2: The hyperparameters are adjusted and tuned based on the implementation results applied to the evaluation datasets.
+* Note 2: The hyperparameters are adjusted and tuned based on the implementation results of the evaluation datasets.
   
 # Scripts
-1- Baseline_PLS2_Imputation_Functions_new.py
+1- Baseline_PLS2_Imputation_Functions_v7.py
 <p align="justify">
-This Python code script contains the code lines for implementing the baseline PLS2 model and the trials for figuring out the impact of missing values on the covariance relationship between the prediction results.
+This Python script contains the code lines for implementing the baseline PLS2 model and the trials for figuring out the impact of missing values on the covariance relationship between the prediction results.
 
 </p>
 
@@ -41,7 +41,8 @@ This Python code script contains the code lines for implementing the baseline PL
 The proposed PLS2-based imputation method has an implementation based on the visualized flow block diagram in Figure 2:
 </p>
 
-![image](https://github.com/ashkantashk/MIPLS2/assets/53473481/137be895-4000-4722-9dbc-09b05d6c1676)
+![image](https://github.com/ashkantashk/MIPLS2/assets/53473481/b99e111b-6477-4b70-a01d-01ca371c69d4)
+
 <p align="justify">
 Figure 2. Functional flow block diagram for the two phases of the proposed PLS2-based imputation algorithm
 </p>
