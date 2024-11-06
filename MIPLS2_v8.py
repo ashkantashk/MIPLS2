@@ -318,9 +318,8 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
     missingmap_yi = np.isnan(YI)
     missing_yi = missingmap_yi.sum(axis=1)
     # Stratify Samples based on the no. MVs
-    uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(missing_yi, 
-                                                                     return_counts=True,
-                                                                     return_index=True)
+    uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = \
+        np.unique(missing_yi, return_counts=True, return_index=True)
     #%
     if Just_do_min:
         GM_type = gm_type # 1: most frequent LVs , 2: average LVs, 3: mean of minimums
@@ -357,7 +356,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
             uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = \
                 np.unique(missing_yi, return_counts=True, return_index=True)
     else:
-        init_len_cix = 3
+        init_len_cix = 0
         c_ix = np.array((1,2,3),dtype=np.int16)
         cnt = 0 
         cnt1 = 0
@@ -373,71 +372,18 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
             cnt += len(tmp1[:3-cnt])
             if cnt!=3:
                 cnt1+=1
+        missingmap_yi_copy = missingmap_yi.copy()
+        missingmap_yi = np.isnan(YI)
+        missing_yi = missingmap_yi.sum(axis=1)
+        # Stratify Samples based on the no. MVs
+        uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = \
+            np.unique(missing_yi, return_counts=True, return_index=True)
     ## New YT based on the new stratified and substratified samples with synthesized MVs
     if YT is not None:
         YT_new = np.empty((YI.shape), dtype = np.float64)
         YT_new[-len(c_ix):,:] = YT[c_ix,:]
     #%% Managing stratified samples:
     if App == 'A0xy':
-        YI = np.copy(YI1)
-        missing_yi = np.isnan(YI).sum(axis=1)
-        uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = \
-        np.unique(missing_yi,return_index=True,return_counts=True)
-        # Initial model on zero missing samples, and progressivly add missing samples    
-        if uq_missing_yi[0]==0:
-            if uq_missing_yi_cnts[0]>2:
-                # Initial model on zero missing samples, and progressivly add missing samples
-                c_ix = np.where(missing_yi == 0)[0]
-                init_len_cix = len(c_ix)
-            else:
-                cnt = uq_missing_yi_cnts[0]
-                init_len_cix = uq_missing_yi_cnts[0]
-                cnt1=1
-                tmp_mean = np.nanmean(YI,axis=0)
-                id_1 = np.where(np.isnan(tmp_mean))
-                tmp_mean[id_1] = 0
-                c_ix = np.array((1,2,3),dtype=np.int16)
-                c_ix[:cnt] = np.where(missing_yi==0)[0].tolist()
-                while cnt!=3:
-                    tmp1 = np.where(missing_yi==uq_missing_yi[cnt1])[0]
-                    diff1 = 3-cnt
-                    tmp_idxy = np.where(np.isnan(YI[tmp1[:diff1],:]))[1]
-                    YI[tmp1[:diff1].repeat(uq_missing_yi[cnt1]),tmp_idxy] = \
-                        tmp_mean[tmp_idxy]
-                    c_ix[cnt:cnt+len(tmp1[:3-cnt])] = tmp1[:diff1]
-                    cnt += len(tmp1[:3-cnt])
-                    if cnt!=3:
-                        cnt1+=1
-                missingmap_yi_copy = missingmap_yi.copy()
-                missingmap_yi = np.isnan(YI)
-                missing_yi = missingmap_yi.sum(axis=1)
-                # Stratify Samples based on the no. MVs
-                uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(missing_yi,
-                                                                                 return_counts=True, 
-                                                                                 return_index=True)
-        else:
-            init_len_cix = 3
-            c_ix = np.array((1,2,3),dtype=np.int16)
-            cnt = 0 
-            cnt1 = 0
-            tmp_mean = np.nanmean(YI,axis=0)
-            id_1 = np.where(np.isnan(tmp_mean))
-            tmp_mean[id_1] = 0
-            while cnt!=3:
-                tmp1 = np.where(missing_yi==uq_missing_yi[cnt1])[0]
-                diff1 = 3-cnt
-                tmp_idxy = np.where(np.isnan(YI[tmp1[:diff1],:]))[1]
-                YI[tmp1[:diff1].repeat(uq_missing_yi[cnt1]),tmp_idxy] = tmp_mean[tmp_idxy]
-                c_ix[cnt:cnt+len(tmp1[:3-cnt])] = tmp1[:diff1]
-                cnt += len(tmp1[:3-cnt])
-                if cnt!=3:
-                    cnt1+=1
-            missingmap_yi_copy = missingmap_yi.copy()
-            missingmap_yi = np.isnan(YI)
-            missing_yi = missingmap_yi.sum(axis=1)
-            # Stratify Samples based on the no. MVs
-            uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = \
-                np.unique(missing_yi, return_counts=True, return_index=True)
         p_ix = [np.where(missing_yi != 0)[0]]
         if Strat_shuffle is not None:
             np.random.seed(Strat_shuffle)
@@ -446,66 +392,6 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
         Lowest_MV_idx = 1
         Max_Value = len(p_ix)
     if App == 'A1xy':
-        YI = np.copy(YI1)
-        missing_yi = np.isnan(YI).sum(axis=1)
-        uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = \
-        np.unique(missing_yi,return_index=True,return_counts=True)
-        # Initial model on zero missing samples, and progressivly add missing samples    
-        if uq_missing_yi[0]==0:
-            if uq_missing_yi_cnts[0]>2:
-                # Initial model on zero missing samples, and progressivly add missing samples
-                c_ix = np.where(missing_yi == 0)[0]
-                init_len_cix = len(c_ix)
-            else:
-                cnt = uq_missing_yi_cnts[0]
-                init_len_cix = uq_missing_yi_cnts[0]
-                cnt1=1
-                tmp_mean = np.nanmean(YI,axis=0)
-                id_1 = np.where(np.isnan(tmp_mean))
-                tmp_mean[id_1] = 0
-                c_ix = np.array((1,2,3),dtype=np.int16)
-                c_ix[:cnt] = np.where(missing_yi==0)[0].tolist()
-                while cnt!=3:
-                    tmp1 = np.where(missing_yi==uq_missing_yi[cnt1])[0]
-                    diff1 = 3-cnt
-                    tmp_idxy = np.where(np.isnan(YI[tmp1[:diff1],:]))[1]
-                    YI[tmp1[:diff1].repeat(uq_missing_yi[cnt1]),tmp_idxy] = \
-                        tmp_mean[tmp_idxy]
-                    c_ix[cnt:cnt+len(tmp1[:3-cnt])] = tmp1[:diff1]
-                    cnt += len(tmp1[:3-cnt])
-                    if cnt!=3:
-                        cnt1+=1
-                missingmap_yi_copy = missingmap_yi.copy()
-                missingmap_yi = np.isnan(YI)
-                missing_yi = missingmap_yi.sum(axis=1)
-                # Stratify Samples based on the no. MVs
-                uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = \
-                    np.unique(missing_yi, return_counts=True, return_index=True)
-        else:
-            init_len_cix = 3
-            c_ix = np.array((1,2,3),dtype=np.int16)
-            cnt = 0 
-            cnt1 = 0
-            tmp_mean = np.nanmean(YI,axis=0)
-            id_1 = np.where(np.isnan(tmp_mean))
-            tmp_mean[id_1] = 0
-            while cnt!=3:
-                tmp1 = np.where(missing_yi==uq_missing_yi[cnt1])[0]
-                diff1 = 3-cnt
-                tmp_idxy = np.where(np.isnan(YI[tmp1[:diff1],:]))[1]
-                YI[tmp1[:diff1].repeat(uq_missing_yi[cnt1]),tmp_idxy] = \
-                    tmp_mean[tmp_idxy]
-                c_ix[cnt:cnt+len(tmp1[:3-cnt])] = tmp1[:diff1]
-                cnt += len(tmp1[:3-cnt])
-                if cnt!=3:
-                    cnt1+=1
-            missingmap_yi_copy = missingmap_yi.copy()
-            missingmap_yi = np.isnan(YI)
-            missing_yi = missingmap_yi.sum(axis=1)
-            # Stratify Samples based on the no. MVs
-            uq_missing_yi, uq_missing_yi_idx, uq_missing_yi_cnts = np.unique(missing_yi,
-                                                                             return_counts=True, 
-                                                                             return_index=True)
         p_ix = []
         for n1 in uq_missing_yi[1:]:
             for n2 in np.where(missing_yi == n1)[0]:
@@ -531,17 +417,13 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
         if App =='A3xy':
             #% For approach A3xx
             subSt_idxI = {}
-            # YI_new = np.copy(YT_new)
             cnt = 0
             ## Substratification:
             for nn in KEYS1:
                 sub_YI = YI[St_idx[nn],:]
-                # sub_YT = YT[St_idx[nn],:]
-                # sub_XT = XT[St_idx[nn],:]
                 sub_mmap_yi = np.where(np.isnan(sub_YI))
                 _, uq_m_xi_cnt = np.unique(sub_mmap_yi[0], axis=0, return_counts=True)
                 subarrays = sub_mmap_yi[1].reshape(-1,uq_m_xi_cnt[0])
-                # subarrays = sub_mmap_yi[1].reshape(-1,1)
                 uq_m_yi, uq_m_yi_cnts = np.unique(subarrays, axis=0, return_counts=True)
                 cnt1=1
                 for ii,kk in enumerate(sorted(np.unique(uq_m_yi_cnts),reverse=True)):
@@ -549,8 +431,6 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                     for jj in range(len(idt)):
                         idt1 = np.where((subarrays == uq_m_yi[idt[jj]]).all(axis=1))[0]
                         subSt_idxI[nn +'_'+f'{ii+jj+cnt1}'] = St_idx[nn][idt1]
-                        # if Strat_shuffle is not None:
-                        #     np.random.shuffle(subSt_idxI[nn +'_'+f'{ii+jj+cnt1}'])
                         cnt += len(idt1)
                     cnt1+=(len(idt)-1)
             St_idx = subSt_idxI.copy()
@@ -580,9 +460,8 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
     #%% Cross_validation mode
     if rnd_stat is None:
         rnd_stat = 42
-    # Nsplits = 30
     Nsplits_old = np.copy(Nsplits).tolist()
-    #%% Pase I: predicting the samples with missing values and imputing them
+    #%% Phase I: predicting the samples with missing values and imputing them
     len_old = len(c_ix)
     if Thresh_itr is None:
         Thresh_itr = 0#5e-2
@@ -960,7 +839,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 if len_old != len(c_ix)-len(pi_ix):
                     pred_old = pred.copy()
                 iter+=1
-                if verbose is not None:
+                if verbose is not None and verbose is not False:
                     bar.update(iter)
     #%%
     YI_P1 = np.copy(YI)
@@ -984,12 +863,9 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
     pred_old = np.copy(pred)
     if YT is None:
         RMSE_old = 1
-        # RMSE_old1 = 1
     else:
         RMSE_old = root_mean_squared_error(YI_P1[idxy], YT[idxy])
-        # RMSE_old1 = root_mean_squared_error(YI_P1, YT)
     RMSE_new = 2*RMSE_old
-    # RMSE_new1 = 2*RMSE_old1
     if CNT is None:
         CNT = 101
     CNT0 = np.copy(CNT)
@@ -1024,9 +900,7 @@ def PLS2Based_Imputation(XI, YI1, App, Just_do_min, Opt_LV, Max_LV, cv_mode,
                 SYC = YI_P2[c_ix,:].std(axis=0)
                 XIC = (XI[c_ix,:] - MXC)/SXC
                 YIC = (YI_P2[c_ix,:] - MYC)/SYC
-                # P.fit(XIP[c_ix,:], YIP[c_ix, :], n_comps)
                 P.fit(XIC,YIC, n_comps)
-                # pred_cv[:, v_ix, :] = P.predict(XIP[v_ix,:])
                 pred_cv[:,v_ix,:] = P.predict(XI[v_ix,:]-MXC)*SYC+MYC
         elif cv_mode=='Venetian':
             # Do CV fit
